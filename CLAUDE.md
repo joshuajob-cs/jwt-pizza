@@ -22,9 +22,12 @@ Frontend-relevant instruction: `instruction/jwtPizzaClient/`, `instruction/jwtPi
 Deliverables that land here: **2** (CI → GitHub Pages), **4** (Playwright UI tests + coverage),
 **6** (S3 + CloudFront); **1**, **5**, **11**, **12** span both repos.
 
-**⚠️ [notes.md](notes.md) is the deliverable 1 worksheet and is currently BLANK.** It's a table
-mapping ~18 user activities → frontend component → backend endpoint → SQL. Filling it requires
-reading both repos together; it is a graded artifact.
+**[notes.md](notes.md) is the deliverable 1 worksheet** — a table mapping 18 user activities →
+frontend component → backend endpoint → SQL. It is a graded artifact; keep it in sync with the code.
+
+**[docs/](docs/) explains the system** (file maps, routing, every activity as a mermaid diagram),
+and every source file carries a `@fileoverview` header and TSDoc comments.
+**When code changes, update the comment and the doc that describe it.**
 
 ---
 
@@ -42,7 +45,8 @@ tsconfig.json         strict: true, jsx: "react", target ES2020
 .env.development      VITE_PIZZA_SERVICE_URL=http://localhost:3000
 .env.production       VITE_PIZZA_SERVICE_URL=https://pizza-service.cs329.click
 public/               images, robots.txt, version.json (placeholder 20000101.000000)
-notes.md              ⚠️ deliverable 1 worksheet — BLANK
+notes.md              deliverable 1 worksheet — activity → component → endpoint → SQL
+docs/                 file maps, routing, activity flows (mermaid)
 incidentReports/      template.md for deliverable 11
 deployService.sh      npm run build → stamp version.json → scp to EC2 public_html
 src/
