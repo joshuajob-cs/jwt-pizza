@@ -1,6 +1,8 @@
+/** @fileoverview The "page not found" page. */
 import React from 'react';
 import View from './view';
 
+/** Shown for any URL no route matches, and by AdminDashboard when the user isn't an admin. */
 export default function NotFound() {
   return (
     <View title='Oops'>

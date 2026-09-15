@@ -1,6 +1,8 @@
+/** @fileoverview The About page. */
 import React from 'react';
 import View from './view';
 
+/** About page at `/about` (footer link). Static text and images; no backend calls. */
 export default function About() {
   return (
     <View title='The secret sauce'>

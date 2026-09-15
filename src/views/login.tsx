@@ -1,3 +1,4 @@
+/** @fileoverview The login page. */
 import React, { useEffect } from 'react';
 import { CloseEyeIcon, KeyIcon, EmailIcon } from '../icons';
 import Button from '../components/button';
@@ -10,6 +11,10 @@ interface Props {
   setUser: (user: User) => void;
 }
 
+/**
+ * Login page at `/login`, or under another page such as `/payment/login`.
+ * On success it sets App's user and goes "up" one path level, so a login that started at payment returns there.
+ */
 export default function Login(props: Props) {
   const [password, setPassword] = React.useState('');
   const [email, setEmail] = React.useState('');
@@ -23,6 +28,7 @@ export default function Login(props: Props) {
     emailRef.current?.focus();
   }, []);
 
+  /** [PUT] /api/auth via pizzaService.login, which also saves the token. Errors are shown as raw JSON. */
   async function login(event: React.FormEvent) {
     event.preventDefault();
     try {

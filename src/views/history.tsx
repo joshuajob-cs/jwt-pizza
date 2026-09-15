@@ -1,6 +1,8 @@
+/** @fileoverview The History page. */
 import React from 'react';
 import View from './view';
 
+/** History page at `/history` (footer link): the story of JWT Pizza. Static; no backend calls. */
 export default function History() {
   return (
     <View title='Mama Rucci, my my'>

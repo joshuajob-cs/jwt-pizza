@@ -1,3 +1,4 @@
+/** @fileoverview The confirmation page for closing a store. */
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useBreadcrumb } from '../hooks/appNavigation';
@@ -5,6 +6,11 @@ import { pizzaService } from '../service/service';
 import View from './view';
 import Button from '../components/button';
 
+/**
+ * Close-store page at `/franchise-dashboard/close-store` or `/admin-dashboard/close-store`.
+ * Reads `location.state.franchise` and `location.state.store`. Confirming calls
+ * [DELETE] /api/franchise/:franchiseId/store/:storeId, then returns to the dashboard it came from.
+ */
 export default function CloseStore() {
   const state = useLocation().state;
   const navigateToParent = useBreadcrumb();

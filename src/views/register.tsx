@@ -1,3 +1,4 @@
+/** @fileoverview The registration page. */
 import React, { useEffect } from 'react';
 import { KeyIcon, CloseEyeIcon, PersonIcon, EmailIcon } from '../icons';
 import Button from '../components/button';
@@ -10,6 +11,10 @@ interface Props {
   setUser: (user: User) => void;
 }
 
+/**
+ * Register page at `/register`, or under another page such as `/payment/register`. New accounts are always
+ * diners. On success the user is logged in right away and taken "up" one path level.
+ */
 export default function Register(props: Props) {
   const [name, setName] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -24,6 +29,7 @@ export default function Register(props: Props) {
     nameRef.current?.focus();
   }, []);
 
+  /** [POST] /api/auth via pizzaService.register, which also saves the token. */
   async function register(event: React.FormEvent) {
     event.preventDefault();
     try {

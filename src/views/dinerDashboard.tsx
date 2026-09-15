@@ -1,3 +1,4 @@
+/** @fileoverview The diner's profile page: who you are, your roles, and your order history. */
 import React from 'react';
 import { Link } from 'react-router-dom';
 import View from './view';
@@ -8,6 +9,11 @@ interface Props {
   user: User | null;
 }
 
+/**
+ * Profile page at `/diner-dashboard`, reached by clicking your initials in the header.
+ * Backend call: [GET] /api/order (the backend picks the diner from the token).
+ * NOTE: `user` falls back to `{}`, which is truthy, so the call is made even when logged out, and it gets a 401.
+ */
 export default function DinerDashboard(props: Props) {
   const user = props.user || ({} as User);
   const [orders, setOrders] = React.useState<Order[]>([]);
@@ -21,6 +27,7 @@ export default function DinerDashboard(props: Props) {
     })();
   }, [user]);
 
+  /** Displays a role; a franchisee role shows the franchise id it applies to. */
   function formatRole(role: { role: Role; objectId?: string }) {
     if (role.role === Role.Franchisee) {
       return `Franchisee on ${role.objectId}`;

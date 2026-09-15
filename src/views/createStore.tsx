@@ -1,3 +1,4 @@
+/** @fileoverview The form for adding a store to a franchise. */
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useBreadcrumb } from '../hooks/appNavigation';
@@ -8,6 +9,10 @@ import Button from '../components/button';
 import { pizzaService } from '../service/service';
 import { Store } from '../service/pizzaService';
 
+/**
+ * Create-store page at `/franchise-dashboard/create-store`. Reads `location.state.franchise`.
+ * Submitting calls [POST] /api/franchise/:franchiseId/store, then returns to the dashboard, which reloads.
+ */
 export default function CreateStore() {
   const state = useLocation().state;
   const navigateToParentPath = useBreadcrumb();

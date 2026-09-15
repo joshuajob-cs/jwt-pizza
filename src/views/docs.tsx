@@ -1,3 +1,4 @@
+/** @fileoverview The API documentation page, for our service or the Factory. */
 import React from 'react';
 import View from './view';
 import { pizzaService } from '../service/service';
@@ -9,6 +10,10 @@ const apis = [
   { name: 'factory', url: import.meta.env.VITE_PIZZA_FACTORY_URL },
 ];
 
+/**
+ * Docs page at `/docs` (our service) or `/docs/factory`. Not linked from the menus; type the URL.
+ * Backend call: [GET] /api/docs on whichever API `docType` names. Lists every endpoint with a curl example.
+ */
 const Docs = () => {
   const { docType } = useParams();
   const [docs, setDocs] = React.useState<Endpoints>({ endpoints: [] });

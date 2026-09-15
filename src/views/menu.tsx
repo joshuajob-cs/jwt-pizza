@@ -1,3 +1,4 @@
+/** @fileoverview The menu page, where a diner builds an order. */
 import React, { useEffect, useState } from 'react';
 import { pizzaService } from '../service/service';
 import View from './view';
@@ -6,6 +7,13 @@ import Button from '../components/button';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Franchise, Menu, Pizza, Store } from '../service/pizzaService';
 
+/**
+ * Order page at `/menu`: pick pizzas and a store, then check out.
+ *
+ * Backend calls on load: [GET] /api/order/menu, then [GET] /api/franchise?page=0&limit=20&name=* (every store,
+ * for the store picker). The order is built up in this page's state; nothing is sent until payment.
+ * Reads `location.state.order` so an order survives a trip to the payment page and back.
+ */
 export default function Menu() {
   const [order, setOrder] = useState(useLocation().state?.order || { items: [] });
   const [menu, setMenu] = useState<Menu>([]);
@@ -24,10 +32,15 @@ export default function Menu() {
     })();
   }, []);
 
+  /** Adds one pizza to the order, copying its title and price into the order item. */
   function selectPizza(pizza: Pizza) {
     setOrder({ items: [...order.items, { menuId: pizza.id, description: pizza.title, price: pizza.price }] });
   }
 
+  /**
+   * Stamps the chosen store and its franchise onto the order, then goes to `/payment` with the order in
+   * `location.state`. Does nothing until a store and at least one pizza are chosen.
+   */
   function checkout(event: React.FormEvent) {
     event.preventDefault();
     if (selectedStore && order.items.length > 0) {

@@ -1,3 +1,4 @@
+/** @fileoverview The shared page frame every page wraps its content in. */
 import React from 'react';
 
 interface Props {
@@ -5,6 +6,7 @@ interface Props {
   children: React.ReactNode;
 }
 
+/** Draws the page's big orange gradient title above whatever content is placed inside `<View>`. */
 export default function View(props: Props) {
   return (
     <>

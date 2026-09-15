@@ -1,3 +1,4 @@
+/** @fileoverview The admin page: every franchise with its admins and stores, and buttons to create or close them. */
 import React from 'react';
 import View from './view';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +12,12 @@ interface Props {
   user: User | null;
 }
 
+/**
+ * Admin page at `/admin-dashboard`. Renders NotFound unless the user is an admin (the route itself is open).
+ * Backend call: [GET] /api/franchise?page=N&limit=3&name=*, re-run when the user or page number changes.
+ * The filter box re-runs it with limit 10 and `*text*`. Create/close buttons navigate to their own pages,
+ * passing the franchise (and store) in `location.state`.
+ */
 export default function AdminDashboard(props: Props) {
   const navigate = useNavigate();
   const [franchiseList, setFranchiseList] = React.useState<FranchiseList>({ franchises: [], more: false });

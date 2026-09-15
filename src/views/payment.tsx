@@ -1,3 +1,4 @@
+/** @fileoverview The payment page: confirm the order and send it to the backend. */
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import View from './view';
@@ -5,6 +6,13 @@ import Button from '../components/button';
 import { pizzaService } from '../service/service';
 import { Order, OrderItem } from '../service/pizzaService';
 
+/**
+ * Payment page at `/payment`. Reads the order from `location.state.order` (set by the menu page).
+ *
+ * This page is the login gate for ordering. On load it calls [GET] /api/user/me, and if nobody is logged in
+ * it sends you to `/payment/login` carrying the same state. After login, the breadcrumb brings you back here
+ * with the order intact.
+ */
 export default function Payment() {
   const [errMessage, setErrorMessage] = React.useState('');
   const location = useLocation();
@@ -21,6 +29,10 @@ export default function Payment() {
     })();
   }, []);
 
+  /**
+   * [POST] /api/order. On success, goes to `/delivery` with the saved order and the Factory's pizza JWT
+   * in `location.state`. On failure, shows the error message.
+   */
   async function processPayment() {
     try {
       const confirmation = await pizzaService.order(order);

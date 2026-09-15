@@ -1,3 +1,4 @@
+/** @fileoverview The admin form for creating a franchise. */
 import React from 'react';
 import { useBreadcrumb } from '../hooks/appNavigation';
 import { EmailIcon, StoreIcon } from '../icons';
@@ -7,6 +8,11 @@ import View from './view';
 import Button from '../components/button';
 import { Franchise } from '../service/pizzaService';
 
+/**
+ * Create-franchise page at `/admin-dashboard/create-franchise`.
+ * Submitting calls [POST] /api/franchise with the name and franchisee email from the form, then returns to the
+ * admin dashboard. The backend rejects non-admins (403) and unknown emails (404).
+ */
 export default function CreateFranchise() {
   const navigateToParentPath = useBreadcrumb();
   const [franchise, setFranchise] = React.useState<Franchise>({ stores: [], id: '', name: '' });

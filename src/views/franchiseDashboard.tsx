@@ -1,3 +1,4 @@
+/** @fileoverview The franchisee's page: their franchise's stores and revenue, or a pitch to become a franchisee. */
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NavLink } from 'react-router-dom';
@@ -11,6 +12,12 @@ interface Props {
   user: User | null;
 }
 
+/**
+ * Franchise page at `/franchise-dashboard` (the "Franchise" link, hidden for admins).
+ * Backend call when logged in: [GET] /api/franchise/:userId. It shows the first franchise returned. With none
+ * (a plain diner, or logged out) it renders the "why franchise" pitch instead.
+ * The store buttons navigate to create-store / close-store, passing the franchise (and store) in `location.state`.
+ */
 export default function FranchiseDashboard(props: Props) {
   const navigate = useNavigate();
   const [franchise, setFranchise] = React.useState<Franchise | null>(null);

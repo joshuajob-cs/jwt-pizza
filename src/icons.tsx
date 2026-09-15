@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Small SVG icons (trash, email, key, store...) as React components, so pages can write `<TrashIcon />`.
+ * They draw with `currentColor`, so each icon takes the text color of wherever it's placed.
+ */
 import React from 'react';
 
 function TrashIcon() {

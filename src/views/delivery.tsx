@@ -1,3 +1,4 @@
+/** @fileoverview The delivery page: shows the pizza JWT and lets you verify it with the Factory. */
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Button from '../components/button';
@@ -7,6 +8,10 @@ import { CloseIcon } from '../icons';
 import { HSOverlay } from 'preline';
 import { JWTPayload, Order } from '../service/pizzaService';
 
+/**
+ * Delivery page at `/delivery`. Reads `{ order, jwt }` from `location.state`, which the payment page sets.
+ * Makes no backend calls on load.
+ */
 export default function Delivery() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -14,6 +19,10 @@ export default function Delivery() {
   const jwt: string = location.state?.jwt || 'error';
   const [jwtPayload, setJwtPayload] = React.useState<JWTPayload>({ message: 'invalid', payload: "{ error: 'invalid JWT' }" });
 
+  /**
+   * [POST] {factory}/api/order/verify: asks the JWT Pizza Factory, not our backend, whether the JWT is genuine,
+   * then opens a modal with the answer. A rejected or tampered JWT shows the "bad pizza" message.
+   */
   async function verify() {
     try {
       const r = await pizzaService.verifyOrder(jwt);

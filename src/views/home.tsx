@@ -1,3 +1,4 @@
+/** @fileoverview The home page. */
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import View from './view';
@@ -5,6 +6,7 @@ import Carousel from '../components/carousel';
 import Quote from '../components/quote';
 import Button from '../components/button';
 
+/** Home page at `/`: a pizza carousel, quotes, and an "Order now" button that goes to `/menu`. No backend calls. */
 export default function Home() {
   const navigate = useNavigate();
 
