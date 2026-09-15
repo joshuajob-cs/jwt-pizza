@@ -1,3 +1,4 @@
+/** @fileoverview The page footer. */
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 
@@ -5,6 +6,10 @@ interface Props {
   navItems: { title: string; to: string; display: string[] }[];
 }
 
+/**
+ * Footer with a link for every navItem whose `display` includes `'footer'`, plus the frontend's version number.
+ * The version comes from the static file `/version.json`, served by Vite from `public/`, not by the backend.
+ */
 export default function Footer(props: Props) {
   const [version, setVersion] = React.useState('');
 

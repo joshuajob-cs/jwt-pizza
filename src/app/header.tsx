@@ -1,3 +1,4 @@
+/** @fileoverview The top navigation bar. */
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { HamburgerIcon, CloseIcon } from '../icons';
@@ -8,11 +9,18 @@ interface Props {
   navItems: { title: string; to: string; display: string[]; constraints?: (() => boolean)[] }[];
 }
 
+/**
+ * Header with a link for every navItem whose `display` includes `'nav'` and whose constraints all pass
+ * (so Login shows only when logged out, Admin only for admins). When someone is logged in, it also shows their
+ * initials, which link to the diner dashboard.
+ */
 export default function Header(props: Props) {
+  /** True when every constraint function returns true. */
   function validateConstraints(constraints: (() => boolean)[]) {
     return constraints.every((c) => c());
   }
 
+  /** Initials for the avatar: first and last name initials, or the first letter of a single name. */
   function generateUserText(user: User) {
     const names = user?.name?.split(' ') || ['?'];
     return names.length > 1 ? names[0].charAt(0) + names[names.length - 1].charAt(0) : names[0].charAt(0);

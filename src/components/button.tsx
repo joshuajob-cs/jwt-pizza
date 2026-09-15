@@ -1,5 +1,12 @@
+/** @fileoverview The orange button used throughout the app. */
 import React from 'react';
 
+/**
+ * - `title`: button text
+ * - `onPress`: click handler
+ * - `submit`: make it a form submit button, so the form's onSubmit runs
+ * - `className`: extra Tailwind classes appended to the defaults
+ */
 interface Props {
   title: string;
   onPress: () => void;

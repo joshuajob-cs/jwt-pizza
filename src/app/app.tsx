@@ -1,3 +1,7 @@
+/**
+ * @fileoverview The app shell and routing hub: holds the logged-in user and declares every page in one
+ * `navItems` list that drives the routes, the header links, and the footer links.
+ */
 import React from 'react';
 import { useEffect } from 'react';
 import { useLocation, Routes, Route } from 'react-router-dom';
@@ -32,10 +36,17 @@ declare global {
   }
 }
 
+/**
+ * Top-level component: header, breadcrumb, the current page, and footer.
+ *
+ * `user` state lives here and nowhere else. It is passed down as a prop to pages that need it, and
+ * `setUser` is passed to Login, Register, and Logout so they can change it. There is no global store.
+ */
 export default function App() {
   const [user, setUser] = React.useState<User | null>(null);
   const location = useLocation();
 
+  // On first load, restore the user from a token saved in localStorage (calls GET /api/user/me).
   useEffect(() => {
     (async () => {
       const user = await pizzaService.getUser();
@@ -43,11 +54,13 @@ export default function App() {
     })();
   }, []);
 
+  // After every page change, re-activate Preline's widgets (dropdowns, modals) and scroll to the top.
   useEffect(() => {
     window.HSStaticMethods.autoInit();
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  // Constraint checks used by navItems to decide which links to show.
   function loggedIn() {
     return !!user;
   }
@@ -61,6 +74,18 @@ export default function App() {
     return !isAdmin();
   }
 
+  /**
+   * Every page in the app. Each entry has:
+   * - `title`: link text (and the React key)
+   * - `to`: the URL pattern for `<Route path>`. `:subPath?` is an optional first segment, so Login works at
+   *   `/login` and also at `/payment/login`; going "back up" then returns to `/payment`
+   * - `component`: the page to render
+   * - `display`: where a link appears, `'nav'` (header) and/or `'footer'`; `[]` means no link
+   * - `constraints`: functions that must all return true for the link to show
+   *
+   * NOTE: constraints only hide links. Every route is always registered, so typing a URL reaches any page;
+   * pages like AdminDashboard check the role themselves, and the backend does the real enforcement.
+   */
   const navItems = [
     { title: 'Home', to: '/', component: <Home />, display: [] },
     { title: 'Diner', to: '/diner-dashboard', component: <DinerDashboard user={user} />, display: [] },

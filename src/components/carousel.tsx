@@ -1,9 +1,11 @@
+/** @fileoverview An auto-playing slideshow, used on the home page. */
 import React from 'react';
 
 interface Props {
   slides: React.ReactNode[];
 }
 
+/** Rotates through `slides` with dots underneath. The sliding behavior comes from Preline (`hs-carousel` classes). */
 export default function Carousel(props: Props) {
   return (
     <div data-hs-carousel='{"loadingClasses": "opacity-0","isAutoPlay": true}' className="relative m-4 min-w-[90%]">

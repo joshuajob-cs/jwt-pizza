@@ -1,3 +1,4 @@
+/** @fileoverview A picture card with a title and description; the menu page shows one per pizza. */
 import React from 'react';
 
 interface Props {
@@ -6,6 +7,7 @@ interface Props {
   image: string;
 }
 
+/** Image on top, title and description below. Clicks are handled by whatever wraps it (menu.tsx). */
 export default function Card(props: Props) {
   return (
     <div className="min-w-32 max-w-80">

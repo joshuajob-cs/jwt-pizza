@@ -1,3 +1,4 @@
+/** @fileoverview The "home > admin-dashboard > create-store" trail shown under the header. */
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { HouseIcon, GreaterThanIcon } from '../icons';
@@ -6,6 +7,10 @@ interface Props {
   location: string;
 }
 
+/**
+ * Splits the current path into segments and links each one, so you can jump back up to any parent page.
+ * @param props.location - the current path without its leading `/`, e.g. `admin-dashboard/create-store`
+ */
 export default function Breadcrumb(props: Props) {
   let currentPath = '';
   const paths = props.location.split('/').map((path) => {

@@ -1,3 +1,4 @@
+/** @fileoverview A styled customer quote, used on the home page. */
 import React from 'react';
 
 interface Props {
@@ -5,6 +6,7 @@ interface Props {
   author: string;
 }
 
+/** A quotation-mark icon, the quote text, and the author's name. */
 export default function Quote(props: Props) {
   return (
     <blockquote className="relative m-10">
