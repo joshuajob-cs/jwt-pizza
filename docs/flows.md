@@ -1,16 +1,37 @@
 # User activity flows
 
 The deliverable 1 table in [notes.md](../notes.md), drawn out. Each section covers a group of rows and shows the
-order things happen in: click → page → service → router → database.
+order things happen in.
 
+- [How to read these diagrams](#how-to-read-these-diagrams)
 - [Pages that never call the backend](#pages-that-never-call-the-backend): home, about, history
 - [Logging in, registering, and logging out](#logging-in-registering-and-logging-out): the token's life
-- [Every request after login](#every-request-after-login)
+- [Close-up: every request after login](#close-up-every-request-after-login)
 - [Ordering and verifying a pizza](#ordering-and-verifying-a-pizza)
 - [Diner pages](#diner-pages): profile, franchise as a diner
 - [Franchisee pages](#franchisee-pages): view franchise, create and close stores
 - [Admin pages](#admin-pages): view all, create and close franchises
 - [Who is allowed to do what](#who-is-allowed-to-do-what)
+
+## How to read these diagrams
+
+Every request that reaches the backend passes through the same five layers, and every diagram draws all five:
+
+```mermaid
+flowchart LR
+  page["page<br/>views/*.tsx"]:::fe --> svc["httpPizzaService.ts"]:::fe --> router["router<br/>routes/*Router.js"]:::be --> db["database.js"]:::be --> mysql[("MySQL")]:::db
+  classDef fe fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+  classDef be fill:#ccfbf1,stroke:#0f766e,color:#134e4a
+  classDef db fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+```
+
+- **Routers never write SQL.** Every query lives in `database.js`, so an arrow into MySQL always comes from
+  `database.js`.
+- **Requests are drawn hop by hop** (solid arrows). None are skipped.
+- **Responses are drawn once** (dashed arrows): from the layer that produced the answer to the next layer that
+  does something with it. A layer that only passes the response along isn't drawn. For example, in Login the
+  response stops at `httpPizzaService` because it saves the token there, but in most other flows it goes straight
+  back to the page.
 
 ## Pages that never call the backend
 
@@ -67,18 +88,24 @@ one up.
 ```mermaid
 sequenceDiagram
   participant V as register.tsx
+  participant S as httpPizzaService
   participant R as authRouter.js
   participant D as database.js
   participant M as MySQL
-  V->>R: POST /api/auth  body: name, email, password
+  V->>S: pizzaService.register(name, email, password)
+  S->>R: POST /api/auth  body: name, email, password
   Note over R: 400 if any field is missing
   R->>D: DB.addUser(name, email, password, roles: diner)
   Note over D: bcrypt.hash(password)
   D->>M: INSERT INTO user (name, email, password)
   D->>M: INSERT INTO userRole (userId, 'diner', 0)
-  R->>D: setAuth: sign token, DB.loginUser
+  D-->>R: user with its new id
+  R->>R: setAuth: jwt.sign(user, jwtSecret)
+  R->>D: DB.loginUser(user.id, token)
   D->>M: INSERT INTO auth (token, userId)
-  R-->>V: user + token, saved to localStorage
+  R-->>S: user + token
+  S->>S: localStorage.setItem('token', token)
+  S-->>V: user
 ```
 
 Registering always creates a **diner**. Nothing in the request can make you a franchisee or admin.
@@ -110,10 +137,11 @@ sequenceDiagram
 be cancelled. Deleting the row from `auth` is what makes logout real: the token still has a valid signature, but
 `setAuthUser` no longer finds it and treats the request as anonymous.
 
-## Every request after login
+## Close-up: every request after login
 
-Every request that carries a token starts the same way, before the router for its URL runs. That's why most
-rows in notes.md begin with `SELECT userId FROM auth WHERE token=?`.
+This diagram zooms in on the space between `httpPizzaService` and the router. The other diagrams draw that
+space as a single arrow. Every request that carries a token passes through these steps before the route handler
+runs, which is why most rows in notes.md begin with `SELECT userId FROM auth WHERE token=?`.
 
 ```mermaid
 sequenceDiagram
@@ -121,9 +149,11 @@ sequenceDiagram
   participant A as setAuthUser
   participant G as authenticateToken
   participant H as route handler
+  participant D as database.js
   participant M as MySQL
   S->>A: any request + Authorization: Bearer token
-  A->>M: SELECT userId FROM auth WHERE token=?
+  A->>D: DB.isLoggedIn(token)
+  D->>M: SELECT userId FROM auth WHERE token=?
   alt row found
     A->>A: jwt.verify(token, jwtSecret) sets req.user
   else no row, or bad signature
@@ -136,6 +166,9 @@ sequenceDiagram
     G->>H: next(). The handler may still say 403 for the wrong role.
   end
 ```
+
+`setAuthUser` is defined in `authRouter.js`, but `service.js` registers it for every request, not just
+`/api/auth` ones. `authenticateToken` only runs on routes that list it.
 
 ## Ordering and verifying a pizza
 
@@ -150,42 +183,91 @@ flowchart LR
   C["payment.tsx<br/>login gate, then POST"]:::fe
   D["orderRouter + DB.addDinerOrder<br/>+ id (from MySQL)<br/>diner and date saved in the row"]:::be
   E["Factory<br/>+ jwt: the signed pizza"]:::fx
+  G["payment.tsx<br/>gets order + jwt back from orderRouter"]:::fe
   F["delivery.tsx<br/>state: order + jwt"]:::fe
-  A --> B --> C --> D --> E --> F
+  A --> B --> C --> D --> E --> G --> F
   classDef fe fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
   classDef be fill:#ccfbf1,stroke:#0f766e,color:#134e4a
   classDef fx fill:#fef3c7,stroke:#b45309,color:#78350f
 ```
 
-### Step by step
+### 1. The menu page loads
 
 ```mermaid
 sequenceDiagram
   actor You
   participant Menu as menu.tsx
+  participant S as httpPizzaService
+  participant OR as orderRouter.js
+  participant FR as franchiseRouter.js
+  participant D as database.js
+  participant M as MySQL
+  Menu->>S: pizzaService.getMenu()
+  S->>OR: GET /api/order/menu
+  OR->>D: DB.getMenu()
+  D->>M: SELECT * FROM menu
+  D-->>Menu: menu items
+  Menu->>S: pizzaService.getFranchises(0, 20, '*')
+  S->>FR: GET /api/franchise?page=0&limit=20&name=*
+  FR->>D: DB.getFranchises(req.user, page, limit, name)
+  D->>M: SELECT id, name FROM franchise WHERE name LIKE ? LIMIT ... OFFSET ...
+  loop each franchise (caller is not an admin)
+    D->>M: SELECT id, name FROM store WHERE franchiseId=?
+  end
+  D-->>Menu: franchises with stores, for the store picker
+  You->>Menu: pick pizzas and a store, click Checkout
+  Menu->>Menu: navigate /payment, state: order
+```
+
+If an admin opens the menu, `getFranchises` loads each franchise's admins and revenue instead (see
+[the admin page](#view-the-admin-page)). The picker only uses the store ids and names.
+
+### 2. Paying
+
+```mermaid
+sequenceDiagram
+  actor You
   participant Pay as payment.tsx
-  participant Del as delivery.tsx
-  participant R as orderRouter / franchiseRouter
+  participant S as httpPizzaService
+  participant UR as userRouter.js
+  participant OR as orderRouter.js
+  participant D as database.js
   participant M as MySQL
   participant F as Factory
-  Menu->>R: GET /api/order/menu
-  R->>M: SELECT * FROM menu
-  Menu->>R: GET /api/franchise?page=0&limit=20&name=*
-  R->>M: SELECT id, name FROM franchise WHERE name LIKE ? LIMIT ... OFFSET ...
-  R->>M: SELECT id, name FROM store WHERE franchiseId=?  (per franchise)
-  You->>Menu: pick pizzas and a store, click Checkout
-  Menu->>Pay: navigate /payment, state: order
-  Pay->>R: GET /api/user/me  (logged in? if not, go to /payment/login)
+  Pay->>S: pizzaService.getUser()
+  S->>UR: GET /api/user/me
+  Note over UR: returns req.user from the token.<br/>No query of its own beyond setAuthUser's.
+  UR-->>S: user, or 401
+  S->>S: on 401, localStorage.removeItem('token') and return null
+  S-->>Pay: user or null. If null, go to /payment/login.
   You->>Pay: click Pay now
-  Pay->>R: POST /api/order  body: franchiseId, storeId, items
-  R->>M: INSERT INTO dinerOrder (dinerId, franchiseId, storeId, now())
-  R->>M: SELECT id FROM menu WHERE id=?  then INSERT INTO orderItem  (per item)
-  R->>F: POST /api/order  diner + order, with the factory API key
-  F-->>R: jwt + reportUrl
-  R-->>Pay: order, jwt, followLinkToEndChaos
-  Pay->>Del: navigate /delivery, state: order + jwt
+  Pay->>S: pizzaService.order(order)
+  S->>OR: POST /api/order  body: franchiseId, storeId, items
+  OR->>D: DB.addDinerOrder(req.user, order)
+  D->>M: INSERT INTO dinerOrder (dinerId, franchiseId, storeId, now())
+  loop each item
+    D->>M: SELECT id FROM menu WHERE id=?
+    D->>M: INSERT INTO orderItem (orderId, menuId, description, price)
+  end
+  D-->>OR: order with its new id
+  OR->>F: POST /api/order  diner + order, with the factory API key
+  F-->>OR: jwt + reportUrl
+  OR-->>Pay: order, jwt, followLinkToEndChaos
+  Pay->>Pay: navigate /delivery, state: order + jwt
+```
+
+### 3. Verifying
+
+```mermaid
+sequenceDiagram
+  actor You
+  participant Del as delivery.tsx
+  participant S as httpPizzaService
+  participant F as Factory
   You->>Del: click Verify
-  Del->>F: POST /api/order/verify  body: jwt  (straight to the Factory)
+  Del->>S: pizzaService.verifyOrder(jwt)
+  S->>F: POST {factory}/api/order/verify  body: jwt
+  Note over S,F: straight to the Factory. Our backend is not involved.
   F-->>Del: message + decoded payload, shown in a pop-up
 ```
 
@@ -206,10 +288,12 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   participant V as dinerDashboard.tsx
+  participant S as httpPizzaService
   participant R as orderRouter.js
   participant D as database.js
   participant M as MySQL
-  V->>R: GET /api/order  + token
+  V->>S: pizzaService.getOrders(user)
+  S->>R: GET /api/order  + token
   Note over R: diner = req.user from the token, never from the URL
   R->>D: DB.getOrders(req.user, page)
   D->>M: SELECT id, franchiseId, storeId, date FROM dinerOrder WHERE dinerId=? LIMIT offset, 10
@@ -224,10 +308,12 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   participant V as franchiseDashboard.tsx
+  participant S as httpPizzaService
   participant R as franchiseRouter.js
   participant D as database.js
   participant M as MySQL
-  V->>R: GET /api/franchise/:userId  (your own id)
+  V->>S: pizzaService.getFranchise(user)
+  S->>R: GET /api/franchise/:userId  (your own id)
   Note over R: allowed: it's you
   R->>D: DB.getUserFranchises(userId)
   D->>M: SELECT objectId FROM userRole WHERE role='franchisee' AND userId=?
@@ -246,10 +332,12 @@ so the database keeps going.
 ```mermaid
 sequenceDiagram
   participant V as franchiseDashboard.tsx
+  participant S as httpPizzaService
   participant R as franchiseRouter.js
   participant D as database.js
   participant M as MySQL
-  V->>R: GET /api/franchise/:userId
+  V->>S: pizzaService.getFranchise(user)
+  S->>R: GET /api/franchise/:userId
   R->>D: DB.getUserFranchises(userId)
   D->>M: SELECT objectId FROM userRole WHERE role='franchisee' AND userId=?
   D->>M: SELECT id, name FROM franchise WHERE id in (...)
@@ -263,26 +351,30 @@ sequenceDiagram
 
 ### Create or close a store
 
-**Rows: Create a store, Close a store.** The permission check needs the franchise's admin list, so both routes
-run `DB.getFranchise` first.
+**Rows: Create a store, Close a store.** Create store is only reached from the franchise dashboard. Close store is
+reached from the franchise dashboard or, for an admin, from the admin dashboard. The permission check needs the
+franchise's admin list, so both routes run `DB.getFranchise` first.
 
 ```mermaid
 sequenceDiagram
-  participant FD as franchiseDashboard.tsx
+  participant P as franchiseDashboard.tsx or adminDashboard.tsx
   participant V as createStore.tsx / closeStore.tsx
+  participant S as httpPizzaService
   participant R as franchiseRouter.js
   participant D as database.js
   participant M as MySQL
-  FD->>V: navigate, state: franchise (+ store to close)
-  V->>R: POST /api/franchise/:franchiseId/store  (or DELETE .../store/:storeId)
+  P->>V: navigate, state: franchise (+ store to close)
+  V->>S: pizzaService.createStore(franchise, store)  or  closeStore(franchise, store)
+  S->>R: POST /api/franchise/:franchiseId/store  (or DELETE .../store/:storeId)
   R->>D: DB.getFranchise(id)
   D->>M: SELECT admins (userRole JOIN user)
   D->>M: SELECT stores with totalRevenue
+  D-->>R: franchise with admins
   alt you are an admin, or in franchise.admins
     R->>D: DB.createStore / DB.deleteStore
     D->>M: INSERT INTO store (franchiseId, name)  or  DELETE FROM store WHERE franchiseId=? AND id=?
-    R-->>V: new store  or  message: store deleted
-    V->>FD: go up one level, and the dashboard reloads
+    D-->>V: new store  or  message: store deleted
+    V->>P: go up one level, and that dashboard reloads
   else anyone else
     R-->>V: 403 unable to create a store
   end
@@ -292,27 +384,36 @@ sequenceDiagram
 
 ### View the admin page
 
-**Row: View Admin page.**
+**Row: View Admin page.** The request goes out as soon as the page opens, for anyone. The admin check on the page
+only decides what to show afterwards.
 
 ```mermaid
 sequenceDiagram
   participant V as adminDashboard.tsx
+  participant S as httpPizzaService
   participant R as franchiseRouter.js
   participant D as database.js
   participant M as MySQL
-  V->>V: Role.isRole(user, admin)? If not, render NotFound
-  V->>R: GET /api/franchise?page=0&limit=3&name=*  + token
+  V->>S: pizzaService.getFranchises(page, 3, '*')
+  S->>R: GET /api/franchise?page=0&limit=3&name=*  + token
   R->>D: DB.getFranchises(req.user, page, limit, name)
   D->>M: SELECT id, name FROM franchise WHERE name LIKE ? LIMIT ... OFFSET ...
-  loop each franchise (caller is admin)
-    D->>M: admins: userRole JOIN user
-    D->>M: stores with totalRevenue
+  alt caller is admin
+    loop each franchise: DB.getFranchise
+      D->>M: admins: userRole JOIN user
+      D->>M: stores with totalRevenue
+    end
+  else anyone else
+    loop each franchise
+      D->>M: SELECT id, name FROM store WHERE franchiseId=?
+    end
   end
   D-->>V: franchises, more (is there a next page?)
+  V->>V: Role.isRole(user, admin)? Show the table. If not, render NotFound.
 ```
 
-The same endpoint returns less for non-admins. The menu page gets only store ids and names, with no admins and
-no revenue.
+The same endpoint returns less for non-admins: store ids and names, with no admins and no revenue. Hiding the
+page with `NotFound` protects nothing. The backend's reply is what keeps the admin data private.
 
 ### Create a franchise
 
@@ -321,10 +422,12 @@ no revenue.
 ```mermaid
 sequenceDiagram
   participant V as createFranchise.tsx
+  participant S as httpPizzaService
   participant R as franchiseRouter.js
   participant D as database.js
   participant M as MySQL
-  V->>R: POST /api/franchise  body: name, admins: email t@jwt.com
+  V->>S: pizzaService.createFranchise(franchise)
+  S->>R: POST /api/franchise  body: name, admins: email t@jwt.com
   Note over R: 403 unless req.user is an admin
   R->>D: DB.createFranchise(franchise)
   D->>M: SELECT id, name FROM user WHERE email=?  (404 if unknown)
@@ -343,10 +446,12 @@ still works for them right away: `getUserFranchises` reads `userRole` from the d
 ```mermaid
 sequenceDiagram
   participant V as closeFranchise.tsx
+  participant S as httpPizzaService
   participant R as franchiseRouter.js
   participant D as database.js
   participant M as MySQL
-  V->>R: DELETE /api/franchise/:franchiseId  + token
+  V->>S: pizzaService.closeFranchise(franchise)
+  S->>R: DELETE /api/franchise/:franchiseId  + token
   Note over R: NO authenticateToken and NO admin check on this route
   R->>D: DB.deleteFranchise(id)
   D->>M: BEGIN TRANSACTION
