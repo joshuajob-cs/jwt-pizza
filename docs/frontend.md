@@ -176,8 +176,8 @@ flowchart LR
 flowchart LR
   page["a page<br/>e.g. menu.tsx"]:::fe -- "pizzaService.getMenu()" --> seam["service.ts<br/>pizzaService"]:::fe
   seam --> http["httpPizzaService.ts<br/>getMenu()"]:::fe
-  http --> call["callEndpoint<br/>+ service URL from .env<br/>+ Bearer token from localStorage"]:::fe
-  call -- "fetch GET /api/order/menu" --> be["jwt-pizza-service"]:::be
+  http --> endpoint["callEndpoint<br/>+ service URL from .env<br/>+ Bearer token from localStorage"]:::fe
+  endpoint -- "fetch GET /api/order/menu" --> be["jwt-pizza-service"]:::be
   be -- "2xx: JSON" --> ok["promise resolves<br/>page stores it with useState"]:::fe
   be -- "error: status + message" --> bad["promise rejects<br/>with code and message"]:::fe
   classDef fe fill:#dbeafe,stroke:#2563eb,color:#1e3a8a

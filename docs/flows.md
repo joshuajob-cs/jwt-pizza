@@ -39,7 +39,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  click["click a link"] --> route["Routes in app.tsx<br/>matches the URL"]:::fe --> page["home.tsx / about.tsx / history.tsx<br/>renders static content"]:::fe
+  link["click a link"] --> route["Routes in app.tsx<br/>matches the URL"]:::fe --> page["home.tsx / about.tsx / history.tsx<br/>renders static content"]:::fe
   page -. "no fetch" .-> none["backend not involved"]
   classDef fe fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
 ```
