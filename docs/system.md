@@ -84,6 +84,19 @@ jwt-pizza-service/              BACKEND: the API the website calls
 └── docs/                       backend docs
 ```
 
+### app, views, components
+
+| Folder | Question it answers | Examples |
+| --- | --- | --- |
+| `app/` | What's on screen all the time, and which page shows for which URL? | `app.tsx` (the routes), `header.tsx`, `footer.tsx` |
+| `views/` | What represents a full page? | `about.tsx`, `menu.tsx`, `login.tsx`, `adminDashboard.tsx` |
+| `components/` | What small pieces get used on many pages? | `button.tsx`, `card.tsx`, `carousel.tsx`, `breadcrumb.tsx` |
+
+```text
+app/app.tsx ──imports──▶ views/*.tsx ──imports──▶ components/*.tsx
+ (routes)                 (pages)                  (small pieces)
+```
+
 ## Who calls whom
 
 Arrows point from the caller to the code it calls. Each layer only talks to the layer next to it: pages never
