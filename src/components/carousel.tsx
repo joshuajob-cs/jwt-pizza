@@ -21,9 +21,7 @@ export default function Carousel(props: Props) {
 
       <div className="hs-carousel-pagination flex justify-center absolute bottom-3 start-0 end-0 space-x-2">
         {props.slides.map((_, index) => (
-          <span
-            key={index}
-            className="hs-carousel-active:bg-blue-700 hs-carousel-active:border-blue-700 size-3 border border-gray-400 rounded-full cursor-pointer"></span>
+          <span key={index} className="hs-carousel-active:bg-blue-700 hs-carousel-active:border-blue-700 size-3 border border-gray-400 rounded-full cursor-pointer"></span>
         ))}
       </div>
     </div>

@@ -23,8 +23,8 @@ export default function Logout(props: Props) {
   }, []);
 
   return (
-    <View title='Logout'>
-      <div className='text-neutral-100'>Logging out ...</div>
+    <View title="Logout">
+      <div className="text-neutral-100">Logging out ...</div>
     </View>
   );
 }

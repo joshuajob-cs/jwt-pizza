@@ -51,9 +51,7 @@ export default function Payment() {
       <div className="flex flex-col justify-center items-center py-8 px-4 sm:px-6 lg:px-8">
         {errMessage && <div className="text-orange-700 bg-yellow-100 p-2 rounded-md">⚠️ {errMessage}</div>}
         {!errMessage && order.items.length === 1 && <div className="text-neutral-100  p-2 rounded-md">Send me that pizza right now!</div>}
-        {!errMessage && order.items.length > 1 && (
-          <div className="text-neutral-100 p-2 rounded-md">Send me those {order.items.length} pizzas right now!</div>
-        )}
+        {!errMessage && order.items.length > 1 && <div className="text-neutral-100 p-2 rounded-md">Send me those {order.items.length} pizzas right now!</div>}
         <div>
           <Button title="Pay now" onPress={processPayment} />
           <Button title="Cancel" onPress={cancel} className="bg-transparent border-neutral-300" />
@@ -87,9 +85,7 @@ export default function Payment() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
                           {order.items.length} pie{order.items.length > 1 ? 's' : ''}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                          {order.items.reduce((a: any, c: any) => a + c.price, 0).toLocaleString()} ₿
-                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{order.items.reduce((a: any, c: any) => a + c.price, 0).toLocaleString()} ₿</td>
                       </tr>
                     </tfoot>
                   </table>

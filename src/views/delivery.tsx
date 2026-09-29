@@ -44,7 +44,8 @@ export default function Delivery() {
           strokeWidth=".25"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="w-64 h-64 text-yellow-500">
+          className="w-64 h-64 text-yellow-500"
+        >
           <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z" />
           <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z" />
         </svg>
@@ -57,14 +58,10 @@ export default function Delivery() {
         <div className="my-4 text-lg text-orange-200 text-start grid grid-cols-5 gap-2">
           <div className="font-semibold text-orange-400">order ID:</div> <div className="col-span-4">{order.id}</div>
           <div className="font-semibold text-orange-400">pie count:</div> <div className="col-span-4">{order.items?.length}</div>
-          <div className="font-semibold text-orange-400">total:</div>{' '}
-          <div className="col-span-4">{order.items?.reduce((a: number, c: any) => a + c.price, 0).toLocaleString()} ₿</div>
+          <div className="font-semibold text-orange-400">total:</div> <div className="col-span-4">{order.items?.reduce((a: number, c: any) => a + c.price, 0).toLocaleString()} ₿</div>
         </div>
 
-        <div
-          className={`font-thin break-all font-mono text-xs bg-slate-100 p-2 ${jwtPayload.message === 'valid' ? 'text-green-500' : 'text-red-500'}`}>
-          {jwt}
-        </div>
+        <div className={`font-thin break-all font-mono text-xs bg-slate-100 p-2 ${jwtPayload.message === 'valid' ? 'text-green-500' : 'text-red-500'}`}>{jwt}</div>
       </div>
 
       <div id="hs-jwt-modal" className="hs-overlay hidden size-full fixed top-0 start-0 z-[80] overflow-x-hidden overflow-y-auto pointer-events-none">
@@ -77,7 +74,8 @@ export default function Delivery() {
               <button
                 type="button"
                 className="flex justify-center items-center size-7 text-sm font-semibold rounded-full border border-transparent text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none  "
-                data-hs-overlay="#hs-jwt-modal">
+                data-hs-overlay="#hs-jwt-modal"
+              >
                 <CloseIcon className="" />
               </button>
             </div>
@@ -88,7 +86,8 @@ export default function Delivery() {
               <button
                 type="button"
                 className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none    "
-                data-hs-overlay="#hs-jwt-modal">
+                data-hs-overlay="#hs-jwt-modal"
+              >
                 Close
               </button>
             </div>

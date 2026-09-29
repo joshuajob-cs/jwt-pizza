@@ -17,7 +17,7 @@ if (rootElement) {
   root.render(
     <BrowserRouter>
       <App />
-    </BrowserRouter>
+    </BrowserRouter>,
   );
 } else {
   console.error('No root element found');

@@ -62,9 +62,7 @@ export default function Header(props: Props) {
             <NavLink className="font-medium text-gray-400  focus:text-orange-600" to="diner-dashboard">
               <div className="hs-tooltip inline-block  [--placement:bottom]">
                 <div className="hs-tooltip-toggle pl-4 font-semibold text-orange-400">
-                  <span className="inline-flex items-center justify-center size-[30px] rounded-full bg-orange-800 font-semibold text-white leading-none">
-                    {generateUserText(props.user)}
-                  </span>
+                  <span className="inline-flex items-center justify-center size-[30px] rounded-full bg-orange-800 font-semibold text-white leading-none">{generateUserText(props.user)}</span>
                 </div>
               </div>
             </NavLink>

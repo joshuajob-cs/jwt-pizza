@@ -76,7 +76,11 @@ export default function AdminDashboard(props: Props) {
                                 {franchise.admins?.map((o) => o.name).join(', ')}
                               </td>
                               <td className="px-6 py-1 whitespace-nowrap text-end text-sm font-medium">
-                                <button type="button" className="px-2 py-1 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-1 border-orange-400 text-orange-400  hover:border-orange-800 hover:text-orange-800" onClick={() => closeFranchise(franchise)}>
+                                <button
+                                  type="button"
+                                  className="px-2 py-1 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-1 border-orange-400 text-orange-400  hover:border-orange-800 hover:text-orange-800"
+                                  onClick={() => closeFranchise(franchise)}
+                                >
                                   <TrashIcon />
                                   Close
                                 </button>
@@ -91,7 +95,11 @@ export default function AdminDashboard(props: Props) {
                                   </td>
                                   <td className="text-end px-2 whitespace-nowrap text-sm text-gray-800">{store.totalRevenue?.toLocaleString()} ₿</td>
                                   <td className="px-6 py-1 whitespace-nowrap text-end text-sm font-medium">
-                                    <button type="button" className="px-2 py-1 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-1 border-orange-400 text-orange-400 hover:border-orange-800 hover:text-orange-800" onClick={() => closeStore(franchise, store)}>
+                                    <button
+                                      type="button"
+                                      className="px-2 py-1 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-1 border-orange-400 text-orange-400 hover:border-orange-800 hover:text-orange-800"
+                                      onClick={() => closeStore(franchise, store)}
+                                    >
                                       <TrashIcon />
                                       Close
                                     </button>
@@ -106,15 +114,27 @@ export default function AdminDashboard(props: Props) {
                         <tr>
                           <td className="px-1 py-1">
                             <input type="text" ref={filterFranchiseRef} name="filterFranchise" placeholder="Filter franchises" className="px-2 py-1 text-sm border border-gray-300 rounded-lg" />
-                            <button type="submit" className="ml-2 px-2 py-1 text-sm font-semibold rounded-lg border border-orange-400 text-orange-400 hover:border-orange-800 hover:text-orange-800" onClick={filterFranchises}>
+                            <button
+                              type="submit"
+                              className="ml-2 px-2 py-1 text-sm font-semibold rounded-lg border border-orange-400 text-orange-400 hover:border-orange-800 hover:text-orange-800"
+                              onClick={filterFranchises}
+                            >
                               Submit
                             </button>
                           </td>
                           <td colSpan={4} className="text-end text-sm font-medium">
-                            <button className="w-12 p-1 text-sm font-semibold rounded-lg border border-transparent bg-white text-grey border-grey m-1 hover:bg-orange-200 disabled:bg-neutral-300 " onClick={() => setFranchisePage(franchisePage - 1)} disabled={franchisePage <= 0}>
+                            <button
+                              className="w-12 p-1 text-sm font-semibold rounded-lg border border-transparent bg-white text-grey border-grey m-1 hover:bg-orange-200 disabled:bg-neutral-300 "
+                              onClick={() => setFranchisePage(franchisePage - 1)}
+                              disabled={franchisePage <= 0}
+                            >
                               «
                             </button>
-                            <button className="w-12 p-1 text-sm font-semibold rounded-lg border border-transparent bg-white text-grey border-grey m-1 hover:bg-orange-200 disabled:bg-neutral-300" onClick={() => setFranchisePage(franchisePage + 1)} disabled={!franchiseList.more}>
+                            <button
+                              className="w-12 p-1 text-sm font-semibold rounded-lg border border-transparent bg-white text-grey border-grey m-1 hover:bg-orange-200 disabled:bg-neutral-300"
+                              onClick={() => setFranchisePage(franchisePage + 1)}
+                              disabled={!franchiseList.more}
+                            >
                               »
                             </button>
                           </td>

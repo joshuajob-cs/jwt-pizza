@@ -40,7 +40,11 @@ export default function DinerDashboard(props: Props) {
     <View title="Your pizza kitchen">
       <div className="text-start py-8 px-4 sm:px-6 lg:px-8">
         <div className="hs-tooltip inline-block">
-          <img className="hs-tooltip-toggle relative inline-block size-[96px] rounded-full ring-2 ring-white hover:z-10" src="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80" alt="Employee stock photo" />
+          <img
+            className="hs-tooltip-toggle relative inline-block size-[96px] rounded-full ring-2 ring-white hover:z-10"
+            src="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2&w=300&h=300&q=80"
+            alt="Employee stock photo"
+          />
         </div>
 
         <div className="my-4 text-lg text-orange-200 text-start grid grid-cols-5 gap-2">

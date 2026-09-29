@@ -26,13 +26,10 @@ export default function Footer(props: Props) {
           {props.navItems.map(
             (item) =>
               item.display.includes('footer') && (
-                <NavLink
-                  key={item.title}
-                  className=" py-4 px-1 inline-flex items-center gap-2 text-sm whitespace-nowrap text-gray-200 hover:text-orange-600 focus:text-orange-600"
-                  to={item.to}>
+                <NavLink key={item.title} className=" py-4 px-1 inline-flex items-center gap-2 text-sm whitespace-nowrap text-gray-200 hover:text-orange-600 focus:text-orange-600" to={item.to}>
                   {item.title}
                 </NavLink>
-              )
+              ),
           )}
         </nav>
         <p className="text-sm text-center italic text-gray-400">© 2024 JWT Pizza LTD. All rights reserved. Version: {version}</p>
