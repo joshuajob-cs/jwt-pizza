@@ -98,6 +98,15 @@ async function basicInit(page: Page) {
     await route.fulfill({ json: orderRes });
   });
 
+  // A one-endpoint API doc
+  await page.route('*/**/api/docs', async (route) => {
+    const docsRes = {
+      endpoints: [{ requiresAuth: false, method: 'GET', path: '/api/order/menu', description: 'Get the pizza menu', example: 'curl localhost:3000/api/order/menu', response: [] }],
+    };
+    expect(route.request().method()).toBe('GET');
+    await route.fulfill({ json: docsRes });
+  });
+
   await page.goto('/');
 }
 
@@ -156,4 +165,26 @@ test('register and logout', async ({ page }) => {
   await page.getByRole('link', { name: 'Logout' }).click();
   await expect(page.getByRole('link', { name: 'Login' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'PL' })).not.toBeVisible();
+});
+
+test('about and history pages', async ({ page }) => {
+  await basicInit(page);
+  await page.getByRole('contentinfo').getByRole('link', { name: 'About' }).click();
+  await expect(page.getByRole('heading', { name: 'The secret sauce' })).toBeVisible();
+
+  await page.getByRole('contentinfo').getByRole('link', { name: 'History' }).click();
+  await expect(page.getByRole('heading', { name: 'Mama Rucci, my my' })).toBeVisible();
+});
+
+test('unknown page shows not found', async ({ page }) => {
+  await basicInit(page);
+  await page.goto('/no-such-page');
+  await expect(page.getByRole('heading', { name: 'Oops' })).toBeVisible();
+});
+
+test('docs page lists endpoints', async ({ page }) => {
+  await basicInit(page);
+  await page.goto('/docs');
+  await expect(page.getByRole('heading', { name: 'JWT Pizza API' })).toBeVisible();
+  await expect(page.getByText('[GET] /api/order/menu')).toBeVisible();
 });
