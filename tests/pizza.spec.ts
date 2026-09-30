@@ -1,10 +1,25 @@
 import { Page } from '@playwright/test';
 import { test, expect } from 'playwright-test-coverage';
-import { Order, Role, User } from '../src/service/pizzaService';
+import { Franchise, Order, Role, User } from '../src/service/pizzaService';
 
 async function basicInit(page: Page) {
   let loggedInUser: User | undefined;
-  const validUsers: Record<string, User> = { 'd@jwt.com': { id: '3', name: 'Kai Chen', email: 'd@jwt.com', password: 'a', roles: [{ role: Role.Diner }] } };
+  const validUsers: Record<string, User> = {
+    'd@jwt.com': { id: '3', name: 'Kai Chen', email: 'd@jwt.com', password: 'a', roles: [{ role: Role.Diner }] },
+    'f@jwt.com': { id: '5', name: 'Frank Owner', email: 'f@jwt.com', password: 'f', roles: [{ role: Role.Diner }, { role: Role.Franchisee, objectId: '2' }] },
+  };
+  const ownedFranchises: Record<string, Franchise[]> = {
+    'f@jwt.com': [
+      {
+        id: '2',
+        name: 'LotaPizza',
+        stores: [
+          { id: '4', name: 'Lehi', totalRevenue: 0.05 },
+          { id: '5', name: 'Springville', totalRevenue: 0.12 },
+        ],
+      },
+    ],
+  };
   const pastOrders: Record<string, Order[]> = {
     'd@jwt.com': [
       {
@@ -99,6 +114,25 @@ async function basicInit(page: Page) {
     };
     expect(route.request().method()).toBe('GET');
     await route.fulfill({ json: franchiseRes });
+  });
+
+  // Return the franchises the logged-in user owns
+  await page.route('*/**/api/franchise/*', async (route) => {
+    expect(route.request().method()).toBe('GET');
+    await route.fulfill({ json: ownedFranchises[loggedInUser?.email ?? ''] ?? [] });
+  });
+
+  // Create a store
+  await page.route('*/**/api/franchise/*/store', async (route) => {
+    const storeReq = route.request().postDataJSON();
+    expect(route.request().method()).toBe('POST');
+    await route.fulfill({ json: { id: '8', name: storeReq.name, totalRevenue: 0 } });
+  });
+
+  // Close a store
+  await page.route('*/**/api/franchise/*/store/*', async (route) => {
+    expect(route.request().method()).toBe('DELETE');
+    await route.fulfill({ json: { message: 'store deleted' } });
   });
 
   // Order a pizza, or list the logged-in diner's past orders
@@ -232,4 +266,43 @@ test('new diner has no order history', async ({ page }) => {
 
   await expect(page.getByText('How have you lived this long without having a pizza?')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Buy one' })).toBeVisible();
+});
+
+test('diner sees the franchise pitch', async ({ page }) => {
+  await login(page, 'd@jwt.com', 'a');
+  await page.getByLabel('Global').getByRole('link', { name: 'Franchise' }).click();
+
+  await expect(page.getByRole('heading', { name: 'So you want a piece of the pie?' })).toBeVisible();
+});
+
+test('franchisee dashboard lists stores', async ({ page }) => {
+  await login(page, 'f@jwt.com', 'f');
+  await page.getByLabel('Global').getByRole('link', { name: 'Franchise' }).click();
+
+  await expect(page.getByRole('heading', { name: 'LotaPizza' })).toBeVisible();
+  await expect(page.getByRole('row', { name: /Lehi.*0\.05 ₿/ })).toBeVisible();
+  await expect(page.getByRole('row', { name: /Springville.*0\.12 ₿/ })).toBeVisible();
+});
+
+test('franchisee creates a store', async ({ page }) => {
+  await login(page, 'f@jwt.com', 'f');
+  await page.getByLabel('Global').getByRole('link', { name: 'Franchise' }).click();
+  await page.getByRole('button', { name: 'Create store' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Create store' })).toBeVisible();
+  await page.getByPlaceholder('store name').fill('Provo');
+  await page.getByRole('button', { name: 'Create' }).click();
+
+  await expect(page.getByRole('heading', { name: 'LotaPizza' })).toBeVisible();
+});
+
+test('franchisee closes a store', async ({ page }) => {
+  await login(page, 'f@jwt.com', 'f');
+  await page.getByLabel('Global').getByRole('link', { name: 'Franchise' }).click();
+  await page.getByRole('row', { name: /Lehi/ }).getByRole('button', { name: 'Close' }).click();
+
+  await expect(page.getByRole('main')).toContainText('Are you sure you want to close the LotaPizza store Lehi ?');
+  await page.getByRole('button', { name: 'Close' }).click();
+
+  await expect(page.getByRole('heading', { name: 'LotaPizza' })).toBeVisible();
 });
