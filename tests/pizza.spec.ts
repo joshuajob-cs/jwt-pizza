@@ -6,8 +6,23 @@ async function basicInit(page: Page) {
   let loggedInUser: User | undefined;
   const validUsers: Record<string, User> = { 'd@jwt.com': { id: '3', name: 'Kai Chen', email: 'd@jwt.com', password: 'a', roles: [{ role: Role.Diner }] } };
 
-  // Authorize login for the given user
+  // Authorize login, register, and logout for the given user
   await page.route('*/**/api/auth', async (route) => {
+    const method = route.request().method();
+
+    if (method === 'POST') {
+      const registerReq = route.request().postDataJSON();
+      loggedInUser = { id: '4', name: registerReq.name, email: registerReq.email, roles: [{ role: Role.Diner }] };
+      await route.fulfill({ json: { user: loggedInUser, token: 'abcdef' } });
+      return;
+    }
+
+    if (method === 'DELETE') {
+      loggedInUser = undefined;
+      await route.fulfill({ json: { message: 'logout successful' } });
+      return;
+    }
+
     const loginReq = route.request().postDataJSON();
     const user = validUsers[loginReq.email];
     if (!user || user.password !== loginReq.password) {
@@ -19,7 +34,7 @@ async function basicInit(page: Page) {
       user: loggedInUser,
       token: 'abcdef',
     };
-    expect(route.request().method()).toBe('PUT');
+    expect(method).toBe('PUT');
     await route.fulfill({ json: loginRes });
   });
 
@@ -126,4 +141,19 @@ test('purchase with login', async ({ page }) => {
 
   // Check balance
   await expect(page.getByText('0.008')).toBeVisible();
+});
+
+test('register and logout', async ({ page }) => {
+  await basicInit(page);
+  await page.getByRole('link', { name: 'Register' }).click();
+  await page.getByPlaceholder('Full name').fill('Pizza Lover');
+  await page.getByPlaceholder('Email address').fill('p@jwt.com');
+  await page.getByPlaceholder('Password').fill('pie');
+  await page.getByRole('button', { name: 'Register' }).click();
+
+  await expect(page.getByRole('link', { name: 'PL' })).toBeVisible();
+
+  await page.getByRole('link', { name: 'Logout' }).click();
+  await expect(page.getByRole('link', { name: 'Login' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'PL' })).not.toBeVisible();
 });
