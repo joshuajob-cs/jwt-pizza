@@ -110,8 +110,11 @@ async function basicInit(page: Page) {
   await page.goto('/');
 }
 
-test('login', async ({ page }) => {
+test.beforeEach(async ({ page }) => {
   await basicInit(page);
+});
+
+test('login', async ({ page }) => {
   await page.getByRole('link', { name: 'Login' }).click();
   await page.getByRole('textbox', { name: 'Email address' }).fill('d@jwt.com');
   await page.getByRole('textbox', { name: 'Password' }).fill('a');
@@ -121,8 +124,6 @@ test('login', async ({ page }) => {
 });
 
 test('purchase with login', async ({ page }) => {
-  await basicInit(page);
-
   // Go to order page
   await page.getByRole('button', { name: 'Order now' }).click();
 
@@ -153,7 +154,6 @@ test('purchase with login', async ({ page }) => {
 });
 
 test('register and logout', async ({ page }) => {
-  await basicInit(page);
   await page.getByRole('link', { name: 'Register' }).click();
   await page.getByPlaceholder('Full name').fill('Pizza Lover');
   await page.getByPlaceholder('Email address').fill('p@jwt.com');
@@ -168,7 +168,6 @@ test('register and logout', async ({ page }) => {
 });
 
 test('about and history pages', async ({ page }) => {
-  await basicInit(page);
   await page.getByRole('contentinfo').getByRole('link', { name: 'About' }).click();
   await expect(page.getByRole('heading', { name: 'The secret sauce' })).toBeVisible();
 
@@ -177,13 +176,11 @@ test('about and history pages', async ({ page }) => {
 });
 
 test('unknown page shows not found', async ({ page }) => {
-  await basicInit(page);
   await page.goto('/no-such-page');
   await expect(page.getByRole('heading', { name: 'Oops' })).toBeVisible();
 });
 
 test('docs page lists endpoints', async ({ page }) => {
-  await basicInit(page);
   await page.goto('/docs');
   await expect(page.getByRole('heading', { name: 'JWT Pizza API' })).toBeVisible();
   await expect(page.getByText('[GET] /api/order/menu')).toBeVisible();
