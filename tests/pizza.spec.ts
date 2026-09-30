@@ -134,11 +134,23 @@ test.beforeEach(async ({ page }) => {
   await basicInit(page);
 });
 
-test('login', async ({ page }) => {
+async function login(page: Page, email: string, password: string) {
   await page.getByRole('link', { name: 'Login' }).click();
-  await page.getByRole('textbox', { name: 'Email address' }).fill('d@jwt.com');
-  await page.getByRole('textbox', { name: 'Password' }).fill('a');
+  await page.getByRole('textbox', { name: 'Email address' }).fill(email);
+  await page.getByRole('textbox', { name: 'Password' }).fill(password);
   await page.getByRole('button', { name: 'Login' }).click();
+}
+
+async function register(page: Page, name: string, email: string, password: string) {
+  await page.getByRole('link', { name: 'Register' }).click();
+  await page.getByPlaceholder('Full name').fill(name);
+  await page.getByPlaceholder('Email address').fill(email);
+  await page.getByPlaceholder('Password').fill(password);
+  await page.getByRole('button', { name: 'Register' }).click();
+}
+
+test('login', async ({ page }) => {
+  await login(page, 'd@jwt.com', 'a');
 
   await expect(page.getByRole('link', { name: 'KC' })).toBeVisible();
 });
@@ -174,11 +186,7 @@ test('purchase with login', async ({ page }) => {
 });
 
 test('register and logout', async ({ page }) => {
-  await page.getByRole('link', { name: 'Register' }).click();
-  await page.getByPlaceholder('Full name').fill('Pizza Lover');
-  await page.getByPlaceholder('Email address').fill('p@jwt.com');
-  await page.getByPlaceholder('Password').fill('pie');
-  await page.getByRole('button', { name: 'Register' }).click();
+  await register(page, 'Pizza Lover', 'p@jwt.com', 'pie');
 
   await expect(page.getByRole('link', { name: 'PL' })).toBeVisible();
 
@@ -207,10 +215,7 @@ test('docs page lists endpoints', async ({ page }) => {
 });
 
 test('diner dashboard shows profile and order history', async ({ page }) => {
-  await page.getByRole('link', { name: 'Login' }).click();
-  await page.getByRole('textbox', { name: 'Email address' }).fill('d@jwt.com');
-  await page.getByRole('textbox', { name: 'Password' }).fill('a');
-  await page.getByRole('button', { name: 'Login' }).click();
+  await login(page, 'd@jwt.com', 'a');
   await page.getByRole('link', { name: 'KC' }).click();
 
   await expect(page.getByRole('heading', { name: 'Your pizza kitchen' })).toBeVisible();
@@ -222,11 +227,7 @@ test('diner dashboard shows profile and order history', async ({ page }) => {
 });
 
 test('new diner has no order history', async ({ page }) => {
-  await page.getByRole('link', { name: 'Register' }).click();
-  await page.getByPlaceholder('Full name').fill('Pizza Lover');
-  await page.getByPlaceholder('Email address').fill('p@jwt.com');
-  await page.getByPlaceholder('Password').fill('pie');
-  await page.getByRole('button', { name: 'Register' }).click();
+  await register(page, 'Pizza Lover', 'p@jwt.com', 'pie');
   await page.getByRole('link', { name: 'PL' }).click();
 
   await expect(page.getByText('How have you lived this long without having a pizza?')).toBeVisible();
