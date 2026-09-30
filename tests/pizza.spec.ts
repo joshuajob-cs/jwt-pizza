@@ -96,7 +96,7 @@ async function basicInit(page: Page) {
     await route.fulfill({ json: menuRes });
   });
 
-  // Standard franchises and stores, or create a franchise
+  // List the franchises whose name matches the filter, or create a franchise
   await page.route(/\/api\/franchise(\?.*)?$/, async (route) => {
     if (route.request().method() === 'POST') {
       const franchiseReq = route.request().postDataJSON();
@@ -105,8 +105,9 @@ async function basicInit(page: Page) {
       return;
     }
 
-    const params = new URL(route.request().url()).searchParams;
-    expect([...params.keys()]).toEqual(['page', 'limit', 'name']);
+    // Like the backend's SQL LIKE: '*' is a wildcard, and case doesn't matter
+    const nameFilter = new URL(route.request().url()).searchParams.get('name') ?? '*';
+    const namePattern = new RegExp('^' + nameFilter.replace(/\*/g, '.*') + '$', 'i');
 
     const franchiseRes = {
       franchises: [
@@ -124,6 +125,7 @@ async function basicInit(page: Page) {
         { id: 4, name: 'topSpot', stores: [] },
       ],
     };
+    franchiseRes.franchises = franchiseRes.franchises.filter((franchise) => namePattern.test(franchise.name));
     expect(route.request().method()).toBe('GET');
     await route.fulfill({ json: franchiseRes });
   });
@@ -355,9 +357,11 @@ test('admin filters franchises by name', async ({ page }) => {
   await page.getByRole('link', { name: 'Admin' }).click();
 
   await page.getByPlaceholder('Filter franchises').fill('Lota');
+  await expect(page.getByRole('row', { name: /PizzaCorp/ })).toBeVisible();
   await page.getByRole('button', { name: 'Submit' }).click();
 
   await expect(page.getByRole('row', { name: /LotaPizza/ })).toBeVisible();
+  await expect(page.getByRole('row', { name: /PizzaCorp/ })).not.toBeVisible();
 });
 
 test('admin creates a franchise', async ({ page }) => {
