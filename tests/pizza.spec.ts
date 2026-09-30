@@ -1,51 +1,63 @@
 import { Page } from '@playwright/test';
 import { test, expect } from 'playwright-test-coverage';
-import { Franchise, Order, Role, User } from '../src/service/pizzaService';
+import { Endpoints, Franchise, Menu, Order, Role, User } from '../src/service/pizzaService';
+
+// ---- Mock data: everything the fake backend knows ----
+
+const users: Record<string, User> = {
+  'd@jwt.com': { id: '3', name: 'Kai Chen', email: 'd@jwt.com', password: 'a', roles: [{ role: Role.Diner }] },
+  'f@jwt.com': { id: '5', name: 'Frank Owner', email: 'f@jwt.com', password: 'f', roles: [{ role: Role.Diner }, { role: Role.Franchisee, objectId: '2' }] },
+  'a@jwt.com': { id: '1', name: 'Mama Ricci', email: 'a@jwt.com', password: 'admin', roles: [{ role: Role.Admin }] },
+};
+
+const menu: Menu = [
+  { id: '1', title: 'Veggie', image: 'pizza1.png', price: 0.0038, description: 'A garden of delight' },
+  { id: '2', title: 'Pepperoni', image: 'pizza2.png', price: 0.0042, description: 'Spicy treat' },
+];
+
+const franchises: Franchise[] = [
+  {
+    id: '2',
+    name: 'LotaPizza',
+    admins: [{ id: '5', name: 'Frank Owner', email: 'f@jwt.com' }],
+    stores: [
+      { id: '4', name: 'Lehi', totalRevenue: 0.05 },
+      { id: '5', name: 'Springville', totalRevenue: 0.12 },
+      { id: '6', name: 'American Fork', totalRevenue: 0 },
+    ],
+  },
+  { id: '3', name: 'PizzaCorp', stores: [{ id: '7', name: 'Spanish Fork', totalRevenue: 0 }] },
+  { id: '4', name: 'topSpot', stores: [] },
+];
+
+const pastOrders: Record<string, Order[]> = {
+  'd@jwt.com': [
+    {
+      id: '7',
+      franchiseId: '2',
+      storeId: '4',
+      date: '2024-06-05T05:14:40.000Z',
+      items: [
+        { menuId: '1', description: 'Veggie', price: 0.0038 },
+        { menuId: '2', description: 'Pepperoni', price: 0.0042 },
+      ],
+    },
+  ],
+};
+
+const apiDocs: Endpoints = {
+  endpoints: [{ requiresAuth: false, method: 'GET', path: '/api/order/menu', description: 'Get the pizza menu', example: 'curl localhost:3000/api/order/menu', response: [] }],
+};
+
+// ---- Mocks: each checks the request first, then answers ----
 
 async function basicInit(page: Page) {
   let loggedInUser: User | undefined;
-  const validUsers: Record<string, User> = {
-    'd@jwt.com': { id: '3', name: 'Kai Chen', email: 'd@jwt.com', password: 'a', roles: [{ role: Role.Diner }] },
-    'f@jwt.com': { id: '5', name: 'Frank Owner', email: 'f@jwt.com', password: 'f', roles: [{ role: Role.Diner }, { role: Role.Franchisee, objectId: '2' }] },
-    'a@jwt.com': { id: '1', name: 'Mama Ricci', email: 'a@jwt.com', password: 'admin', roles: [{ role: Role.Admin }] },
-  };
-  const ownedFranchises: Record<string, Franchise[]> = {
-    'f@jwt.com': [
-      {
-        id: '2',
-        name: 'LotaPizza',
-        stores: [
-          { id: '4', name: 'Lehi', totalRevenue: 0.05 },
-          { id: '5', name: 'Springville', totalRevenue: 0.12 },
-        ],
-      },
-    ],
-  };
-  const pastOrders: Record<string, Order[]> = {
-    'd@jwt.com': [
-      {
-        id: '7',
-        franchiseId: '2',
-        storeId: '4',
-        date: '2024-06-05T05:14:40.000Z',
-        items: [
-          { menuId: '1', description: 'Veggie', price: 0.0038 },
-          { menuId: '2', description: 'Pepperoni', price: 0.0042 },
-        ],
-      },
-    ],
-  };
 
-  // Authorize login, register, and logout for the given user
+  // Log in, register, or log out
   await page.route('*/**/api/auth', async (route) => {
     const method = route.request().method();
-
-    if (method === 'POST') {
-      const registerReq = route.request().postDataJSON();
-      loggedInUser = { id: '4', name: registerReq.name, email: registerReq.email, roles: [{ role: Role.Diner }] };
-      await route.fulfill({ json: { user: loggedInUser, token: 'abcdef' } });
-      return;
-    }
+    expect(['PUT', 'POST', 'DELETE']).toContain(method);
 
     if (method === 'DELETE') {
       loggedInUser = undefined;
@@ -53,52 +65,38 @@ async function basicInit(page: Page) {
       return;
     }
 
-    const loginReq = route.request().postDataJSON();
-    const user = validUsers[loginReq.email];
-    if (!user || user.password !== loginReq.password) {
-      await route.fulfill({ status: 401, json: { error: 'Unauthorized' } });
-      return;
+    const authReq = route.request().postDataJSON();
+    if (method === 'POST') {
+      loggedInUser = { id: '4', name: authReq.name, email: authReq.email, roles: [{ role: Role.Diner }] };
+    } else {
+      const user = users[authReq.email];
+      if (!user || user.password !== authReq.password) {
+        await route.fulfill({ status: 401, json: { error: 'Unauthorized' } });
+        return;
+      }
+      loggedInUser = user;
     }
-    loggedInUser = validUsers[loginReq.email];
-    const loginRes = {
-      user: loggedInUser,
-      token: 'abcdef',
-    };
-    expect(method).toBe('PUT');
-    await route.fulfill({ json: loginRes });
+    await route.fulfill({ json: { user: loggedInUser, token: 'abcdef' } });
   });
 
-  // Return the currently logged in user
+  // Return the logged-in user
   await page.route('*/**/api/user/me', async (route) => {
     expect(route.request().method()).toBe('GET');
     await route.fulfill({ json: loggedInUser });
   });
 
-  // A standard menu
+  // The menu
   await page.route('*/**/api/order/menu', async (route) => {
-    const menuRes = [
-      {
-        id: 1,
-        title: 'Veggie',
-        image: 'pizza1.png',
-        price: 0.0038,
-        description: 'A garden of delight',
-      },
-      {
-        id: 2,
-        title: 'Pepperoni',
-        image: 'pizza2.png',
-        price: 0.0042,
-        description: 'Spicy treat',
-      },
-    ];
     expect(route.request().method()).toBe('GET');
-    await route.fulfill({ json: menuRes });
+    await route.fulfill({ json: menu });
   });
 
   // List the franchises whose name matches the filter, or create a franchise
   await page.route(/\/api\/franchise(\?.*)?$/, async (route) => {
-    if (route.request().method() === 'POST') {
+    const method = route.request().method();
+    expect(['GET', 'POST']).toContain(method);
+
+    if (method === 'POST') {
       const franchiseReq = route.request().postDataJSON();
       expect(franchiseReq).toMatchObject({ name: expect.any(String), admins: [{ email: expect.any(String) }] });
       await route.fulfill({ json: { ...franchiseReq, id: '9' } });
@@ -108,43 +106,25 @@ async function basicInit(page: Page) {
     // Like the backend's SQL LIKE: '*' is a wildcard, and case doesn't matter
     const nameFilter = new URL(route.request().url()).searchParams.get('name') ?? '*';
     const namePattern = new RegExp('^' + nameFilter.replace(/\*/g, '.*') + '$', 'i');
-
-    const franchiseRes = {
-      franchises: [
-        {
-          id: 2,
-          name: 'LotaPizza',
-          admins: [{ id: 5, name: 'Frank Owner', email: 'f@jwt.com' }],
-          stores: [
-            { id: 4, name: 'Lehi' },
-            { id: 5, name: 'Springville' },
-            { id: 6, name: 'American Fork' },
-          ],
-        },
-        { id: 3, name: 'PizzaCorp', stores: [{ id: 7, name: 'Spanish Fork' }] },
-        { id: 4, name: 'topSpot', stores: [] },
-      ],
-    };
-    franchiseRes.franchises = franchiseRes.franchises.filter((franchise) => namePattern.test(franchise.name));
-    expect(route.request().method()).toBe('GET');
-    await route.fulfill({ json: franchiseRes });
+    await route.fulfill({ json: { franchises: franchises.filter((franchise) => namePattern.test(franchise.name)), more: false } });
   });
 
-  // Return the franchises the logged-in user owns, or close a franchise
+  // Return the franchises the logged-in user runs, or close a franchise
   await page.route('*/**/api/franchise/*', async (route) => {
-    if (route.request().method() === 'DELETE') {
+    const method = route.request().method();
+    expect(['GET', 'DELETE']).toContain(method);
+
+    if (method === 'DELETE') {
       await route.fulfill({ json: { message: 'franchise deleted' } });
       return;
     }
-
-    expect(route.request().method()).toBe('GET');
-    await route.fulfill({ json: ownedFranchises[loggedInUser?.email ?? ''] ?? [] });
+    await route.fulfill({ json: franchises.filter((franchise) => franchise.admins?.some((admin) => admin.email === loggedInUser?.email)) });
   });
 
   // Create a store
   await page.route('*/**/api/franchise/*/store', async (route) => {
-    const storeReq = route.request().postDataJSON();
     expect(route.request().method()).toBe('POST');
+    const storeReq = route.request().postDataJSON();
     await route.fulfill({ json: { id: '8', name: storeReq.name, totalRevenue: 0 } });
   });
 
@@ -156,28 +136,21 @@ async function basicInit(page: Page) {
 
   // Order a pizza, or list the logged-in diner's past orders
   await page.route('*/**/api/order', async (route) => {
-    if (route.request().method() === 'GET') {
-      const historyRes = { dinerId: loggedInUser?.id, orders: pastOrders[loggedInUser?.email ?? ''] ?? [], page: 1 };
-      await route.fulfill({ json: historyRes });
+    const method = route.request().method();
+    expect(['GET', 'POST']).toContain(method);
+
+    if (method === 'GET') {
+      await route.fulfill({ json: { dinerId: loggedInUser?.id, orders: pastOrders[loggedInUser?.email ?? ''] ?? [], page: 1 } });
       return;
     }
-
     const orderReq = route.request().postDataJSON();
-    const orderRes = {
-      order: { ...orderReq, id: 23 },
-      jwt: 'eyJpYXQ',
-    };
-    expect(route.request().method()).toBe('POST');
-    await route.fulfill({ json: orderRes });
+    await route.fulfill({ json: { order: { ...orderReq, id: 23 }, jwt: 'eyJpYXQ' } });
   });
 
-  // A one-endpoint API doc
+  // The API docs
   await page.route('*/**/api/docs', async (route) => {
-    const docsRes = {
-      endpoints: [{ requiresAuth: false, method: 'GET', path: '/api/order/menu', description: 'Get the pizza menu', example: 'curl localhost:3000/api/order/menu', response: [] }],
-    };
     expect(route.request().method()).toBe('GET');
-    await route.fulfill({ json: docsRes });
+    await route.fulfill({ json: apiDocs });
   });
 
   // A valid pizza, from the Factory
@@ -188,6 +161,8 @@ async function basicInit(page: Page) {
 
   await page.goto('/');
 }
+
+// ---- Test steps ----
 
 test.beforeEach(async ({ page }) => {
   await basicInit(page);
