@@ -71,7 +71,7 @@ async function basicInit(page: Page) {
     } else {
       const user = users[authReq.email];
       if (!user || user.password !== authReq.password) {
-        await route.fulfill({ status: 401, json: { error: 'Unauthorized' } });
+        await route.fulfill({ status: 404, json: { message: 'unknown user' } });
         return;
       }
       loggedInUser = user;
@@ -187,6 +187,13 @@ test('login', async ({ page }) => {
   await login(page, 'd@jwt.com', 'a');
 
   await expect(page.getByRole('link', { name: 'KC' })).toBeVisible();
+});
+
+test('login with a wrong password shows an error', async ({ page }) => {
+  await login(page, 'd@jwt.com', 'wrong');
+
+  await expect(page.getByRole('main')).toContainText('unknown user');
+  await expect(page.getByRole('link', { name: 'KC' })).not.toBeVisible();
 });
 
 test('purchase with login', async ({ page }) => {
