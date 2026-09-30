@@ -1,10 +1,24 @@
 import { Page } from '@playwright/test';
 import { test, expect } from 'playwright-test-coverage';
-import { Role, User } from '../src/service/pizzaService';
+import { Order, Role, User } from '../src/service/pizzaService';
 
 async function basicInit(page: Page) {
   let loggedInUser: User | undefined;
   const validUsers: Record<string, User> = { 'd@jwt.com': { id: '3', name: 'Kai Chen', email: 'd@jwt.com', password: 'a', roles: [{ role: Role.Diner }] } };
+  const pastOrders: Record<string, Order[]> = {
+    'd@jwt.com': [
+      {
+        id: '7',
+        franchiseId: '2',
+        storeId: '4',
+        date: '2024-06-05T05:14:40.000Z',
+        items: [
+          { menuId: '1', description: 'Veggie', price: 0.0038 },
+          { menuId: '2', description: 'Pepperoni', price: 0.0042 },
+        ],
+      },
+    ],
+  };
 
   // Authorize login, register, and logout for the given user
   await page.route('*/**/api/auth', async (route) => {
@@ -87,8 +101,14 @@ async function basicInit(page: Page) {
     await route.fulfill({ json: franchiseRes });
   });
 
-  // Order a pizza.
+  // Order a pizza, or list the logged-in diner's past orders
   await page.route('*/**/api/order', async (route) => {
+    if (route.request().method() === 'GET') {
+      const historyRes = { dinerId: loggedInUser?.id, orders: pastOrders[loggedInUser?.email ?? ''] ?? [], page: 1 };
+      await route.fulfill({ json: historyRes });
+      return;
+    }
+
     const orderReq = route.request().postDataJSON();
     const orderRes = {
       order: { ...orderReq, id: 23 },
@@ -184,4 +204,31 @@ test('docs page lists endpoints', async ({ page }) => {
   await page.goto('/docs');
   await expect(page.getByRole('heading', { name: 'JWT Pizza API' })).toBeVisible();
   await expect(page.getByText('[GET] /api/order/menu')).toBeVisible();
+});
+
+test('diner dashboard shows profile and order history', async ({ page }) => {
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByRole('textbox', { name: 'Email address' }).fill('d@jwt.com');
+  await page.getByRole('textbox', { name: 'Password' }).fill('a');
+  await page.getByRole('button', { name: 'Login' }).click();
+  await page.getByRole('link', { name: 'KC' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Your pizza kitchen' })).toBeVisible();
+  await expect(page.getByRole('main')).toContainText('Kai Chen');
+  await expect(page.getByRole('main')).toContainText('d@jwt.com');
+  await expect(page.getByRole('main')).toContainText('diner');
+  await expect(page.getByRole('cell', { name: '7', exact: true })).toBeVisible();
+  await expect(page.getByRole('cell', { name: '0.008 ₿' })).toBeVisible();
+});
+
+test('new diner has no order history', async ({ page }) => {
+  await page.getByRole('link', { name: 'Register' }).click();
+  await page.getByPlaceholder('Full name').fill('Pizza Lover');
+  await page.getByPlaceholder('Email address').fill('p@jwt.com');
+  await page.getByPlaceholder('Password').fill('pie');
+  await page.getByRole('button', { name: 'Register' }).click();
+  await page.getByRole('link', { name: 'PL' }).click();
+
+  await expect(page.getByText('How have you lived this long without having a pizza?')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Buy one' })).toBeVisible();
 });
