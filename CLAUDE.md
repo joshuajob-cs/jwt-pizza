@@ -33,15 +33,19 @@ and every source file carries a `@fileoverview` header and TSDoc comments.
 
 ## Repo layout
 
-64 tracked files. No `vite.config.js` — Vite runs on defaults with the repo root as root.
-
 ```
 index.html            entry; loads /index.tsx and ./main.css
 index.tsx             ReactDOM root + <BrowserRouter>
 main.css              Tailwind directives + custom bits
+vite.config.js        istanbul plugin instruments src/ for coverage (dev server only, not `vite build`)
 tailwind.config.js    content globs, `wobble` animation, Preline plugin
 postcss.config.js     tailwind + autoprefixer
-tsconfig.json         strict: true, jsx: "react", target ES2020
+tsconfig.json         strict: true, jsx: "react", target ES2020, moduleResolution "bundler"
+playwright.config.js  chromium only, baseURL :5173, starts `npm run dev` itself, 10s timeouts
+.nycrc.json           coverage gate: 80% lines, nothing else
+eslint.config.js      only the test-file layout rules (see Testing); src/ isn't linted
+tests/pizza.spec.ts   the Playwright UI tests, backend fully mocked
+.github/workflows/    ci.yml: lint → tests + coverage badge → build → GitHub Pages
 .env.development      VITE_PIZZA_SERVICE_URL=http://localhost:3000
 .env.production       VITE_PIZZA_SERVICE_URL=https://pizza-service.cs329.click
 public/               images, robots.txt, version.json (placeholder 20000101.000000)
@@ -130,7 +134,12 @@ npm install
 npm run dev        # vite dev server (default :5173), uses .env.development
 npm run build      # → dist/
 npm run preview
+npm run lint       # test-file layout rules
+npm test           # Playwright; needs no backend (everything is mocked)
+npm run test:coverage   # same, through nyc; fails under 80% lines
 ```
+
+Playwright needs its browser once per machine: `npx playwright install chromium`.
 
 **The backend must be running first** — `.env.development` points at `http://localhost:3000`.
 Start `jwt-pizza-service` (`npm start`) with its MySQL up, then `npm run dev` here.
@@ -150,8 +159,37 @@ menu items — without them the menu and store picker are empty.
 - Wrap page content in `<View title="...">` for the consistent gradient heading.
 - Prettier-ish: 2-space indent, single quotes, semicolons, wide lines (~200 cols). Match it.
 - Existing views are the best templates — copy the closest one rather than inventing a pattern.
-- **No test framework, no linter, no CI yet.** Deliverable 2 adds `.github/workflows/`;
-  deliverable 4 adds Playwright. Don't assume `npm test` exists.
+
+### Testing
+
+UI tests only: a real browser drives the real frontend, and **every backend and Factory call is mocked**
+with `page.route`. Nothing here tests the backend or the frontend↔backend contract; that drift is the
+accepted cost of stable tests.
+
+`tests/pizza.spec.ts` has three sections, in this order, and ESLint enforces the split:
+
+1. **Mock data** — typed module constants at the top (`users`, `menu`, `franchises`, `pastOrders`,
+   `apiDocs`), typed with `pizzaService.ts` types so frontend type changes flag the mocks.
+2. **Mocks** — every `page.route` lives in `basicInit`, run by `test.beforeEach`. Each mock checks the
+   request method first, then any request shape, then answers.
+3. **Tests** — a `test()` body is only page actions and `expect`s on the page. No `page.route`, no
+   `waitForRequest`: request checks belong in the mock. `login` / `register` helpers cover the forms.
+
+Rules for mocks:
+
+- **As simple as possible.** A complicated mock means testing the mock, not the frontend. A mock may
+  copy logic only when the real backend has it (the franchise list filters by name like SQL `LIKE`).
+- **Mock checks are shape checks** (`expect.any(String)`), never one test's values, since every test
+  shares them. They must not be stricter than the backend (it defaults `page`/`limit`/`name`, so the
+  mock doesn't require them).
+- **Comment style:** a verb when the mock has logic (`// Log in, register, or log out`), a noun when it
+  returns fixed data (`// The menu`).
+- Locators: `getByRole` with a name; scope duplicates (`getByLabel('Global')` is the header nav,
+  `getByRole('contentinfo')` the footer). Wait for something only the next page has — a price that is
+  also on the current page makes the test race.
+
+A new test that needs different mock data goes in a `test.describe` with its own `beforeEach`, not a
+`page.route` inside the test.
 
 ### Git
 
