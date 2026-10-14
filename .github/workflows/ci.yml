@@ -72,6 +72,14 @@ jobs:
           nohup npm start > backend.log 2>&1 &
           curl --silent --retry 30 --retry-connrefused --retry-delay 1 localhost:3000
 
+      # Fail in seconds, not minutes, if the admin the tests log in as is missing.
+      # Retries a few times because the backend adds the admin just after it starts listening.
+      - name: Check admin login
+        run: |
+          curl --silent --fail --retry 5 --retry-all-errors --retry-delay 1 -X PUT localhost:3000/api/auth \
+            -H 'Content-Type: application/json' -d '{"email":"a@jwt.com","password":"admin"}' > /dev/null \
+            || { echo "Admin login failed: is a@jwt.com seeded in the CI database?"; exit 1; }
+
       - name: Run tests
         run: |
           npx playwright install --with-deps --only-shell chromium
