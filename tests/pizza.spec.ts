@@ -199,6 +199,7 @@ test('login with a wrong password shows an error', async ({ page }) => {
   await login(page, 'd@jwt.com', 'wrong');
 
   await expect(page.getByRole('main')).toContainText('unknown user');
+  await expect(page.getByRole('main')).not.toContainText('"code"');
   await expect(page.getByRole('link', { name: 'KC' })).not.toBeVisible();
 });
 
