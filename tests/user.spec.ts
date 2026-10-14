@@ -39,11 +39,19 @@ async function loginAdmin(page: Page) {
   await page.getByRole('link', { name: 'Admin' }).click();
 }
 
-// Change the name in the edit dialog and wait for the dialog to close.
-async function updateName(page: Page, name: string) {
+// Change any of name, email, and password in the edit dialog and wait for the dialog to close.
+async function updateUser(page: Page, changes: { name?: string; email?: string; password?: string }) {
   await page.getByRole('button', { name: 'Edit' }).click();
   await expect(page.locator('h3')).toContainText('Edit user');
-  await page.getByRole('textbox', { name: 'name', exact: true }).fill(name);
+  if (changes.name) {
+    await page.getByRole('textbox', { name: 'name', exact: true }).fill(changes.name);
+  }
+  if (changes.email) {
+    await page.getByRole('textbox', { name: 'email', exact: true }).fill(changes.email);
+  }
+  if (changes.password) {
+    await page.getByLabel('password', { exact: true }).fill(changes.password);
+  }
   await page.getByRole('button', { name: 'Update' }).click();
 
   await page.waitForSelector('[role="dialog"].hidden', { state: 'attached' });
@@ -53,12 +61,34 @@ test('updateUser', async ({ page }) => {
   const { email } = await registerDiner(page);
   await expect(page.getByRole('main')).toContainText('pizza diner');
 
-  await updateName(page, 'pizza dinerx');
+  await updateUser(page, { name: 'pizza dinerx' });
   await expect(page.getByRole('main')).toContainText('pizza dinerx');
 
   await page.getByRole('link', { name: 'Logout' }).click();
   await login(page, email, 'diner');
   await expect(page.getByRole('main')).toContainText('pizza dinerx');
+});
+
+test('updateUser email', async ({ page }) => {
+  const { email } = await registerDiner(page);
+  const newEmail = `new${email}`;
+
+  await updateUser(page, { email: newEmail });
+  await expect(page.getByRole('main')).toContainText(newEmail);
+
+  await page.getByRole('link', { name: 'Logout' }).click();
+  await login(page, newEmail, 'diner');
+  await expect(page.getByRole('main')).toContainText(newEmail);
+});
+
+test('updateUser password', async ({ page }) => {
+  const { name, email } = await registerDiner(page);
+
+  await updateUser(page, { password: 'newpassword' });
+
+  await page.getByRole('link', { name: 'Logout' }).click();
+  await login(page, email, 'newpassword');
+  await expect(page.getByRole('main')).toContainText(name);
 });
 
 test('listUsers', async ({ page }) => {
