@@ -401,3 +401,24 @@ test('delivery page verifies the pizza with the Factory', async ({ page }) => {
   await page.getByRole('button', { name: 'Verify' }).click();
   await expect(page.getByRole('heading', { name: 'JWT Pizza - valid' })).toBeVisible();
 });
+
+test.describe('when the backend refuses a user update', () => {
+  test.beforeEach(async ({ page }) => {
+    // Refuse every update
+    await page.route(/\/api\/user\/\d+$/, async (route) => {
+      expect(route.request().method()).toBe('PUT');
+      await route.fulfill({ status: 500, json: { message: 'unable to update user' } });
+    });
+  });
+
+  test('the edit dialog shows the error and the name stays', async ({ page }) => {
+    await login(page, 'd@jwt.com', 'a');
+    await page.getByRole('link', { name: 'KC' }).click();
+    await page.getByRole('button', { name: 'Edit' }).click();
+    await page.getByRole('textbox', { name: 'name', exact: true }).fill('New Name');
+    await page.getByRole('button', { name: 'Update' }).click();
+
+    await expect(page.getByRole('dialog')).toContainText('unable to update user');
+    await expect(page.getByRole('main')).toContainText('Kai Chen');
+  });
+});
