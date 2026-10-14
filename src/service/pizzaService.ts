@@ -137,6 +137,8 @@ interface PizzaService {
   logout(): void;
   /** The user for the saved token, or null. [GET] /api/user/me */
   getUser(): Promise<User | null>;
+  /** Save a user's changed name, email, and/or password. [PUT] /api/user/:userId */
+  updateUser(user: User): Promise<User>;
   /** All pizzas. [GET] /api/order/menu */
   getMenu(): Promise<Menu>;
   /** The logged-in diner's orders. [GET] /api/order */
