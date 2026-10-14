@@ -54,6 +54,7 @@ jobs:
           npm ci
           echo "module.exports = {
             jwtSecret: 'ci-only-throwaway-secret',
+            defaultAdmin: { name: '常用名字', email: 'a@jwt.com', password: 'admin' },
             db: {
               connection: {
                 host: '127.0.0.1',
