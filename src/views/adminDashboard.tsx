@@ -1,4 +1,4 @@
-/** @fileoverview The admin page: every franchise with its admins and stores, buttons to create or close them, and a list of users. */
+/** @fileoverview The admin page: every franchise with its admins and stores, buttons to create or close them, and a list of users to search and delete. */
 import React from 'react';
 import View from './view';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +19,7 @@ interface Props {
  * passing the franchise (and store) in `location.state`.
  * Users: [GET] /api/user?page=N&limit=10&name=*text*, re-run when the user, page, or search text changes.
  * Search starts over at page 0; Prev/Next keep the search.
+ * Delete: [DELETE] /api/user/:userId straight away (no confirm page), then the current page reloads.
  */
 export default function AdminDashboard(props: Props) {
   const navigate = useNavigate();
@@ -36,13 +37,15 @@ export default function AdminDashboard(props: Props) {
     })();
   }, [props.user, franchisePage]);
 
+  async function loadUsers() {
+    setUserList(await pizzaService.getUsers(userPage, 10, `*${userFilter}*`));
+  }
+
   React.useEffect(() => {
     if (!Role.isRole(props.user, Role.Admin)) {
       return;
     }
-    (async () => {
-      setUserList(await pizzaService.getUsers(userPage, 10, `*${userFilter}*`));
-    })();
+    loadUsers();
   }, [props.user, userPage, userFilter]);
 
   function createFranchise() {
@@ -64,6 +67,11 @@ export default function AdminDashboard(props: Props) {
   function filterUsers() {
     setUserPage(0);
     setUserFilter(filterUserRef.current?.value ?? '');
+  }
+
+  async function deleteUser(user: User) {
+    await pizzaService.deleteUser(user);
+    await loadUsers();
   }
 
   let response = <NotFound />;
@@ -180,7 +188,7 @@ export default function AdminDashboard(props: Props) {
                     <table aria-label="Users" className="min-w-full divide-y divide-gray-200">
                       <thead className="uppercase text-neutral-100 bg-slate-400 border-b-2 border-gray-500">
                         <tr>
-                          {['Name', 'Email', 'Role'].map((header) => (
+                          {['Name', 'Email', 'Role', 'Action'].map((header) => (
                             <th key={header} scope="col" className="px-6 py-3 text-center text-xs font-medium">
                               {header}
                             </th>
@@ -193,6 +201,16 @@ export default function AdminDashboard(props: Props) {
                             <td className="text-start px-2 whitespace-nowrap text-sm text-gray-800">{user.name}</td>
                             <td className="text-start px-2 whitespace-nowrap text-sm text-gray-800">{user.email}</td>
                             <td className="text-start px-2 whitespace-nowrap text-sm text-gray-800">{user.roles?.map((r) => r.role).join(', ')}</td>
+                            <td className="px-6 py-1 whitespace-nowrap text-end text-sm font-medium">
+                              <button
+                                type="button"
+                                aria-label="Delete"
+                                className="px-2 py-1 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-1 border-orange-400 text-orange-400 hover:border-orange-800 hover:text-orange-800"
+                                onClick={() => deleteUser(user)}
+                              >
+                                <TrashIcon />
+                              </button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -208,7 +226,7 @@ export default function AdminDashboard(props: Props) {
                               Search
                             </button>
                           </td>
-                          <td className="text-end text-sm font-medium">
+                          <td className="text-end text-sm font-medium" colSpan={2}>
                             <button
                               className="px-2 py-1 text-sm font-semibold rounded-lg border border-transparent bg-white text-grey border-grey m-1 hover:bg-orange-200 disabled:bg-neutral-300"
                               onClick={() => setUserPage(userPage - 1)}

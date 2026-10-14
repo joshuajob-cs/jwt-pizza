@@ -147,6 +147,8 @@ interface PizzaService {
   updateUser(user: User): Promise<User>;
   /** One page of users (admin); `*` in nameFilter is a wildcard. [GET] /api/user?page&limit&name */
   getUsers(page: number, limit: number, nameFilter: string): Promise<UserList>;
+  /** Delete a user (admin); their orders stay. [DELETE] /api/user/:userId */
+  deleteUser(user: User): Promise<void>;
   /** All pizzas. [GET] /api/order/menu */
   getMenu(): Promise<Menu>;
   /** The logged-in diner's orders. [GET] /api/order */

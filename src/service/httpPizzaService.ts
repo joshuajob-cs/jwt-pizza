@@ -112,6 +112,11 @@ class HttpPizzaService implements PizzaService {
     return this.callEndpoint(`/api/user?page=${page}&limit=${limit}&name=${encodeURIComponent(nameFilter)}`);
   }
 
+  /** [DELETE] /api/user/:userId */
+  async deleteUser(user: User): Promise<void> {
+    return this.callEndpoint(`/api/user/${user.id}`, 'DELETE');
+  }
+
   /** [GET] /api/order/menu */
   async getMenu(): Promise<Menu> {
     return this.callEndpoint('/api/order/menu');
