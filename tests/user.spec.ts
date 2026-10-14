@@ -96,3 +96,20 @@ test('listUsers pages through users', async ({ page, request }) => {
   await page.getByRole('button', { name: 'Prev' }).click();
   await expect(firstRow).toHaveText(firstOnPage0 ?? '');
 });
+
+test('deleteUser', async ({ page }) => {
+  const { name } = await registerDiner(page);
+  await page.getByRole('link', { name: 'Logout' }).click();
+  await loginAdmin(page);
+
+  const usersTable = page.getByRole('table', { name: 'Users' });
+  await page.getByRole('textbox', { name: 'Filter users' }).fill(name);
+  await page.getByRole('button', { name: 'Search' }).click();
+  await usersTable.getByRole('row', { name }).getByRole('button', { name: 'Delete' }).click();
+
+  await expect(usersTable).not.toContainText(name);
+  await page.reload();
+  await page.getByRole('textbox', { name: 'Filter users' }).fill(name);
+  await page.getByRole('button', { name: 'Search' }).click();
+  await expect(usersTable.locator('tbody tr')).toHaveCount(0);
+});
