@@ -162,9 +162,9 @@ export default function DinerDashboard(props: Props) {
                 <div className="font-semibold">name:</div>
                 <input type="text" aria-label="name" className="col-span-4 border border-gray-300 rounded-md p-1" defaultValue={user.name} ref={nameRef} />
                 <div className="font-semibold">email:</div>
-                <input type="email" className="col-span-4 border border-gray-300 rounded-md p-1" defaultValue={user.email} ref={emailRef} />
+                <input type="email" aria-label="email" className="col-span-4 border border-gray-300 rounded-md p-1" defaultValue={user.email} ref={emailRef} />
                 <div className="font-semibold">password:</div>
-                <input id="password" type="text" className="col-span-4 border border-gray-300 rounded-md p-1" defaultValue="" ref={passwordRef} />
+                <input id="password" type="password" aria-label="password" className="col-span-4 border border-gray-300 rounded-md p-1" defaultValue="" ref={passwordRef} />
               </div>
             </div>
             <div className="flex justify-end items-center gap-x-2 py-3 px-4 border-t  bg-slate-200 rounded-b-xl">
