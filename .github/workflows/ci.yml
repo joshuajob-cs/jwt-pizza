@@ -16,7 +16,6 @@ jobs:
         image: mysql:8.0.29
         env:
           MYSQL_ROOT_PASSWORD: tempdbpassword
-          MYSQL_DATABASE: pizza
         ports:
           - '3306:3306'
         options: >-
@@ -75,8 +74,12 @@ jobs:
 
       - name: Run tests
         run: |
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps --only-shell chromium
           npm run test:coverage
+
+      - name: Backend log
+        if: failure()
+        run: cat jwt-pizza-service/backend.log
 
       - name: Update coverage
         run: |
