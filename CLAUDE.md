@@ -210,14 +210,11 @@ via GitHub's **"Sync fork"** — **never "Discard commits"**, that would drop th
 
 Mostly harmless, but they'll bite during testing deliverables:
 
-1. **`PizzaService.register` signature lies.** The interface declares
-   `register(email, password, role)` but `HttpPizzaService.register` and every caller use
-   `(name, email, password)`. All three are `string`, so TS structurally accepts it — but a fake
-   built from the interface signature will silently mis-map arguments.
-   [pizzaService.ts:109](src/service/pizzaService.ts#L109)
+1. ~~`PizzaService.register` declared `(email, password, role)` while every caller used
+   `(name, email, password)`~~ — fixed: the interface now says `(name, email, password)`.
 2. `getOrders(user)` takes a `user` and ignores it — the backend derives the diner from the token.
-3. `callEndpoint` wraps an `async` executor in `new Promise` — a throw before the first `await`
-   would escape rather than reject. Works today; don't copy the pattern.
+3. ~~`callEndpoint` wrapped an `async` executor in `new Promise`~~ — fixed: it's a plain `async`
+   function that throws `{ code, message }`.
 4. `logout()` fires the DELETE without awaiting, then clears the token.
 5. `public/version.json` is the placeholder `20000101.000000`; CI stamps the real value.
 6. `deployService.sh` builds into `dist/` then `scp`s to `public_html/$service` while the cleanup

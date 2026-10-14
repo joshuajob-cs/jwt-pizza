@@ -25,40 +25,41 @@ class HttpPizzaService implements PizzaService {
    * @param body - object to send as JSON
    */
   async callEndpoint(path: string, method: string = 'GET', body?: any): Promise<any> {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const options: any = {
-          method: method,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        };
+    const options: any = {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    };
 
-        const authToken = localStorage.getItem('token');
-        if (authToken) {
-          options.headers['Authorization'] = `Bearer ${authToken}`;
-        }
+    const authToken = localStorage.getItem('token');
+    if (authToken) {
+      options.headers['Authorization'] = `Bearer ${authToken}`;
+    }
 
-        if (body) {
-          options.body = JSON.stringify(body);
-        }
+    if (body) {
+      options.body = JSON.stringify(body);
+    }
 
-        if (!path.startsWith('http')) {
-          path = pizzaServiceUrl + path;
-        }
+    if (!path.startsWith('http')) {
+      path = pizzaServiceUrl + path;
+    }
 
-        const r = await fetch(path, options);
-        const j = await r.json();
-        if (r.ok) {
-          resolve(j);
-        } else {
-          reject({ code: r.status, message: j.message });
-        }
-      } catch (e: any) {
-        reject({ code: 500, message: e.message });
-      }
-    });
+    // A network failure or a body that isn't JSON becomes a 500.
+    let r: Response;
+    let j: any;
+    try {
+      r = await fetch(path, options);
+      j = await r.json();
+    } catch (e: any) {
+      throw { code: 500, message: e.message };
+    }
+
+    if (!r.ok) {
+      throw { code: r.status, message: j.message };
+    }
+    return j;
   }
 
   /** [PUT] /api/auth. Saves the returned token in localStorage so later requests are authenticated. */

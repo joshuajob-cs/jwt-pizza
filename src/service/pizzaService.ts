@@ -134,11 +134,8 @@ type JWTPayload = {
 interface PizzaService {
   /** Log in and remember the token. [PUT] /api/auth */
   login(email: string, password: string): Promise<User>;
-  /**
-   * Create a diner account and log in. [POST] /api/auth
-   * NOTE: the real implementation and every caller use (name, email, password); these parameter names are wrong.
-   */
-  register(email: string, password: string, role: string): Promise<User>;
+  /** Create a diner account and log in. [POST] /api/auth */
+  register(name: string, email: string, password: string): Promise<User>;
   /** Log out and forget the token. [DELETE] /api/auth */
   logout(): void;
   /** The user for the saved token, or null. [GET] /api/user/me */
