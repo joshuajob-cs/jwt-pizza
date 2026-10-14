@@ -105,7 +105,7 @@ can swap in a fake implementing the `PizzaService` interface. Use it — don't i
 - **`payment.tsx` is the login gate for ordering** — it redirects to `/payment/login` if there's
   no user, preserving `location.state` so the order survives the round trip.
 - **Errors** reject as `{ code, message }` from `callEndpoint`; views catch and set a message
-  string. `login.tsx` does `JSON.stringify(error)` — ugly output, a known wart.
+  string; login and register show the backend's `message`, or the status code if there is none.
 
 ### Backend contract
 

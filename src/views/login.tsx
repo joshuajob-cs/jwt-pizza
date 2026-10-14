@@ -34,8 +34,8 @@ export default function Login(props: Props) {
     try {
       props.setUser(await pizzaService.login(email, password));
       navigateToParent();
-    } catch (error) {
-      displayMessage(JSON.stringify(error));
+    } catch (error: any) {
+      displayMessage(error.message ?? `Login failed (error ${error.code}). Please try again.`);
     }
   }
 
