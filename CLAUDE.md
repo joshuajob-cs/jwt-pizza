@@ -45,6 +45,7 @@ playwright.config.js  chromium only, baseURL :5173, starts `npm run dev` itself,
 .nycrc.json           coverage gate: 80% lines, nothing else
 eslint.config.js      only the test-file layout rules (see Testing); src/ isn't linted
 tests/pizza.spec.ts   the Playwright UI tests, backend fully mocked
+tests/user.spec.ts    full-stack Playwright tests (deliverable 5 TDD) against a real backend, no mocks
 .github/workflows/    ci.yml: lint → tests + coverage badge → build → GitHub Pages
 .env.development      VITE_PIZZA_SERVICE_URL=http://localhost:3000
 .env.production       VITE_PIZZA_SERVICE_URL=https://pizza-service.cs329.click
@@ -115,6 +116,7 @@ can swap in a fake implementing the `PizzaService` interface. Use it — don't i
 | --- | --- | --- |
 | PUT/POST/DELETE | `/api/auth` | login / register / logout |
 | GET | `/api/user/me` | `getUser()` on app mount |
+| PUT | `/api/user/:userId` | diner dashboard Edit dialog (saves the returned token) |
 | GET | `/api/order/menu` | menu view |
 | GET/POST | `/api/order` | history / place order |
 | GET | `/api/franchise?page&limit&name` | menu store picker, admin dashboard |
@@ -135,7 +137,7 @@ npm run dev        # vite dev server (default :5173), uses .env.development
 npm run build      # → dist/
 npm run preview
 npm run lint       # test-file layout rules
-npm test           # Playwright; needs no backend (everything is mocked)
+npm test           # Playwright; user.spec.ts needs the backend + MySQL running (pizza.spec.ts is mocked)
 npm run test:coverage   # same, through nyc; fails under 80% lines
 ```
 
@@ -162,9 +164,15 @@ menu items — without them the menu and store picker are empty.
 
 ### Testing
 
-UI tests only: a real browser drives the real frontend, and **every backend and Factory call is mocked**
-with `page.route`. Nothing here tests the backend or the frontend↔backend contract; that drift is the
-accepted cost of stable tests.
+Two kinds of Playwright test, one per file:
+
+- **`tests/pizza.spec.ts` — UI tests.** A real browser drives the real frontend, and **every backend and
+  Factory call is mocked** with `page.route`. It doesn't test the backend or the frontend↔backend
+  contract; that drift is the accepted cost of stable tests.
+- **`tests/user.spec.ts` — full-stack TDD tests.** No mocks: they hit the real backend on :3000, so they
+  test the contract and let a failing test drive new backend endpoints. Each test registers a random
+  user so runs don't collide. CI starts MySQL and the backend fork before Playwright, so **push backend
+  changes before the frontend changes that need them.**
 
 `tests/pizza.spec.ts` has three sections, in this order, and ESLint enforces the split:
 
