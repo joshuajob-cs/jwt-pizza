@@ -100,6 +100,12 @@ type FranchiseList = {
   more: boolean;
 };
 
+/** One page of users from GET /api/user (admin only). `more` is true when there is another page. */
+type UserList = {
+  users: User[];
+  more: boolean;
+};
+
 /** One endpoint's documentation, as listed by GET /api/docs. */
 type Endpoint = {
   requiresAuth: boolean;
@@ -139,6 +145,8 @@ interface PizzaService {
   getUser(): Promise<User | null>;
   /** Save a user's changed name, email, and/or password. [PUT] /api/user/:userId */
   updateUser(user: User): Promise<User>;
+  /** One page of users (admin); `*` in nameFilter is a wildcard. [GET] /api/user?page&limit&name */
+  getUsers(page: number, limit: number, nameFilter: string): Promise<UserList>;
   /** All pizzas. [GET] /api/order/menu */
   getMenu(): Promise<Menu>;
   /** The logged-in diner's orders. [GET] /api/order */
@@ -163,4 +171,4 @@ interface PizzaService {
   docs(docType: string): Promise<Endpoints>;
 }
 
-export { Role, PizzaService, User, Menu, Pizza, OrderHistory, Order, Franchise, FranchiseList, Store, OrderItem, Endpoint, Endpoints, OrderResponse, JWTPayload };
+export { Role, PizzaService, User, Menu, Pizza, OrderHistory, Order, Franchise, FranchiseList, UserList, Store, OrderItem, Endpoint, Endpoints, OrderResponse, JWTPayload };
