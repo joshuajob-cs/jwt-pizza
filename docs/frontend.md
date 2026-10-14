@@ -50,7 +50,7 @@ jwt-pizza/
     │   ├── delivery.tsx     `/delivery`: shows the pizza JWT and verifies it with the Factory.
     │   ├── dinerDashboard.tsx      `/diner-dashboard`: your info and order history.
     │   ├── franchiseDashboard.tsx  `/franchise-dashboard`: your franchise's stores and revenue.
-    │   ├── adminDashboard.tsx      `/admin-dashboard`: all franchises (admin only).
+    │   ├── adminDashboard.tsx      `/admin-dashboard`: all franchises and users (admin only).
     │   ├── createStore.tsx         form: add a store.
     │   ├── closeStore.tsx          confirm: close a store.
     │   ├── createFranchise.tsx     form: create a franchise.

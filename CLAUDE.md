@@ -117,6 +117,8 @@ can swap in a fake implementing the `PizzaService` interface. Use it — don't i
 | PUT/POST/DELETE | `/api/auth` | login / register / logout |
 | GET | `/api/user/me` | `getUser()` on app mount |
 | PUT | `/api/user/:userId` | diner dashboard Edit dialog (saves the returned token) |
+| GET | `/api/user?page&limit&name` | admin dashboard Users table (search, Prev/Next) |
+| DELETE | `/api/user/:userId` | admin dashboard Users table, Delete button (no confirm page) |
 | GET | `/api/order/menu` | menu view |
 | GET/POST | `/api/order` | history / place order |
 | GET | `/api/franchise?page&limit&name` | menu store picker, admin dashboard |

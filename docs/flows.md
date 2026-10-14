@@ -462,6 +462,58 @@ sequenceDiagram
   R-->>V: message: franchise deleted
 ```
 
+### List and search users
+
+The Users table on the admin page. Unlike the franchise list, it only asks once the page knows the user is an
+admin, and the backend refuses anyone else with 403. A page holds 10 users; **Search** starts over at page 0, and
+**Prev**/**Next** keep the search.
+
+```mermaid
+sequenceDiagram
+  participant V as adminDashboard.tsx
+  participant S as httpPizzaService
+  participant R as userRouter.js
+  participant D as database.js
+  participant M as MySQL
+  V->>V: Role.isRole(user, admin)? If not, ask nothing.
+  V->>S: pizzaService.getUsers(page, 10, '*text*')
+  S->>R: GET /api/user?page=0&limit=10&name=*text*  + token
+  Note over R: not admin = 403. page, limit, or name that isn't valid = 400
+  R->>D: DB.getUsers(page, limit, name)
+  D->>M: SELECT id, name, email FROM user WHERE name LIKE ? LIMIT ? OFFSET ?
+  loop each user
+    D->>M: SELECT role, objectId FROM userRole WHERE userId=?
+  end
+  D-->>V: users (never the password), more
+```
+
+### Delete a user
+
+The trash button on a user's row. It deletes straight away, with no confirm page, then reloads the current page of
+users.
+
+```mermaid
+sequenceDiagram
+  participant V as adminDashboard.tsx
+  participant S as httpPizzaService
+  participant R as userRouter.js
+  participant D as database.js
+  participant M as MySQL
+  V->>S: pizzaService.deleteUser(user)
+  S->>R: DELETE /api/user/:userId  + token
+  Note over R: not admin = 403. id that isn't a whole number = 400
+  R->>D: DB.deleteUser(userId)
+  D->>M: BEGIN TRANSACTION
+  D->>M: DELETE FROM auth WHERE userId=?  (their tokens stop working)
+  D->>M: DELETE FROM userRole WHERE userId=?
+  D->>M: DELETE FROM user WHERE id=?  (no row = 404)
+  D->>M: COMMIT (or ROLLBACK if any step fails)
+  R-->>V: message: user deleted
+  V->>S: pizzaService.getUsers(...) again
+```
+
+Their orders stay, so franchise revenue and order history don't change when a user leaves.
+
 ## Who is allowed to do what
 
 Permission is checked in two places, and only one of them actually protects anything:
@@ -485,6 +537,7 @@ What the **backend** enforces:
 | See a user's franchises | 401 | own only (else `[]`) | own only | anyone's |
 | Create or close a store | 401 | 403 | ✅ only in their own franchise | ✅ |
 | Create a franchise, add menu item | 401 | 403 | 403 | ✅ |
+| List or delete users | 401 | 403 | 403 | ✅ |
 | **Close a franchise** | ⚠️ allowed | ⚠️ allowed | ⚠️ allowed | ✅ |
 
 The ⚠️ row is a deliberate hole in the course code: `DELETE /api/franchise/:franchiseId` never checks who is
