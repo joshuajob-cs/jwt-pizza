@@ -24,6 +24,7 @@ export default function DinerDashboard(props: Props) {
   const nameRef = React.useRef<HTMLInputElement>(null);
   const emailRef = React.useRef<HTMLInputElement>(null);
   const passwordRef = React.useRef<HTMLInputElement>(null);
+  const [updateError, setUpdateError] = React.useState('');
 
   React.useEffect(() => {
     (async () => {
@@ -44,7 +45,8 @@ export default function DinerDashboard(props: Props) {
   }
 
   /**
-   * Shows the dialog's edits on the page, then closes the dialog. A blank password means "keep the old one".
+   * Saves the dialog's edits, shows them on the page, then closes the dialog. A blank password means "keep the old one".
+   * If the backend refuses, the dialog stays open with the error and the page keeps the old values.
    * The delay lets Preline see the dialog as open before it is told to close.
    */
   async function updateUser() {
@@ -55,8 +57,14 @@ export default function DinerDashboard(props: Props) {
       password: passwordRef.current?.value || undefined,
       roles: user.roles,
     };
-    await pizzaService.updateUser(updatedUser);
+    try {
+      await pizzaService.updateUser(updatedUser);
+    } catch (error: any) {
+      setUpdateError(error.message ?? `Update failed (error ${error.code}). Please try again.`);
+      return;
+    }
 
+    setUpdateError('');
     props.setUser(updatedUser);
     setTimeout(() => {
       HSOverlay.close(document.getElementById('hs-jwt-modal')!);
@@ -73,7 +81,14 @@ export default function DinerDashboard(props: Props) {
             alt="Employee stock photo"
           />
         </div>
-        <Button title="Edit" className="w-16 p-0" onPress={() => HSOverlay.open(document.getElementById('hs-jwt-modal')!)} />
+        <Button
+          title="Edit"
+          className="w-16 p-0"
+          onPress={() => {
+            setUpdateError('');
+            HSOverlay.open(document.getElementById('hs-jwt-modal')!);
+          }}
+        />
 
         <div className="my-4 text-lg text-orange-200 text-start grid grid-cols-5 gap-2">
           <div className="font-semibold text-orange-400">name:</div> <div className="col-span-4">{user.name}</div>
@@ -166,6 +181,7 @@ export default function DinerDashboard(props: Props) {
                 <div className="font-semibold">password:</div>
                 <input id="password" type="password" aria-label="password" className="col-span-4 border border-gray-300 rounded-md p-1" defaultValue="" ref={passwordRef} />
               </div>
+              {updateError && <div className="text-sm text-red-600">{updateError}</div>}
             </div>
             <div className="flex justify-end items-center gap-x-2 py-3 px-4 border-t  bg-slate-200 rounded-b-xl">
               <button
