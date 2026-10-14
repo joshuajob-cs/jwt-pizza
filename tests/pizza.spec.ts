@@ -85,6 +85,12 @@ async function basicInit(page: Page) {
     await route.fulfill({ json: loggedInUser });
   });
 
+  // The users, without passwords
+  await page.route(/\/api\/user(\?.*)?$/, async (route) => {
+    expect(route.request().method()).toBe('GET');
+    await route.fulfill({ json: { users: Object.values(users).map(({ password, ...user }) => user), more: false } });
+  });
+
   // The menu
   await page.route('*/**/api/order/menu', async (route) => {
     expect(route.request().method()).toBe('GET');

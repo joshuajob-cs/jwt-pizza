@@ -84,7 +84,8 @@ test('listUsers pages through users', async ({ page, request }) => {
   await loginAdmin(page);
 
   const usersTable = page.getByRole('table', { name: 'Users' });
-  const firstRow = usersTable.getByRole('row').nth(1);
+  // The first user row (tbody, so not the header or footer). textContent waits until it exists.
+  const firstRow = usersTable.locator('tbody tr').first();
   const firstOnPage0 = await firstRow.textContent();
   await expect(page.getByRole('button', { name: 'Prev' })).toBeDisabled();
 
