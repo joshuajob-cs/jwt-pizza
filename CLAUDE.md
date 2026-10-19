@@ -46,7 +46,7 @@ playwright.config.js  chromium only, baseURL :5173, starts `npm run dev` itself,
 eslint.config.js      only the test-file layout rules (see Testing); src/ isn't linted
 tests/pizza.spec.ts   the Playwright UI tests, backend fully mocked
 tests/user.spec.ts    full-stack Playwright tests (deliverable 5 TDD) against a real backend, no mocks
-.github/workflows/    ci.yml: lint → tests + coverage badge → build → GitHub Pages
+.github/workflows/    ci.yml: lint → tests + coverage badge → build → S3 + CloudFront (OIDC)
 .env.development      VITE_PIZZA_SERVICE_URL=http://localhost:3000
 .env.production       VITE_PIZZA_SERVICE_URL=https://pizza-service.cs329.click
 public/               images, robots.txt, version.json (placeholder 20000101.000000)
