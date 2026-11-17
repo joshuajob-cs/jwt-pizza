@@ -149,7 +149,10 @@ export function imported_HAR() {
         },
       }
     )
-    // TODO: check the purchase succeeded, and stop this iteration if it didn't
+    if (!check(response, { 'purchase status equals 200': (response) => response.status.toString() === '200' })) {
+      console.log(response.body);
+      fail('Purchase was *not* 200');
+    }
 
     response = http.post(
       'https://pizza-factory.cs329.click/api/order/verify',
