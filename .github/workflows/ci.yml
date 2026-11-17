@@ -69,6 +69,20 @@ jobs:
               url: 'https://pizza-factory.cs329.click',
               apiKey: '${{ secrets.FACTORY_API_KEY }}',
             },
+            // Dummy telemetry: the backend requires these sections, but this throwaway copy has
+            // nowhere to send to. Port 9 refuses at once, so sends fail fast and nothing leaves CI.
+            metrics: {
+              source: 'jwt-pizza-ci',
+              endpointUrl: 'http://localhost:9/metrics',
+              apiKey: 'none',
+              accountId: 'none',
+            },
+            logging: {
+              source: 'jwt-pizza-ci',
+              endpointUrl: 'http://localhost:9/logs',
+              apiKey: 'none',
+              accountId: 'none',
+            },
           };" > src/config.js
           nohup npm start > backend.log 2>&1 &
           curl --silent --retry 30 --retry-connrefused --retry-delay 1 localhost:3000
