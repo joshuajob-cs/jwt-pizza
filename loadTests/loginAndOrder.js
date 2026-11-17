@@ -1,4 +1,4 @@
-import { sleep, group } from 'k6'
+import { sleep, check, group, fail } from 'k6';
 import http from 'k6/http'
 
 export const options = {
@@ -64,6 +64,10 @@ export function imported_HAR() {
         },
       }
     )
+    if (!check(response, { 'status equals 200': (response) => response.status.toString() === '200' })) {
+      console.log(response.body);
+      fail('Login was *not* 200');
+    }
     sleep(0.9)
 
     response = http.get('https://pizza-service.joshuajob-cs.click/api/order/menu', {
@@ -145,6 +149,7 @@ export function imported_HAR() {
         },
       }
     )
+    // TODO: check the purchase succeeded, and stop this iteration if it didn't
 
     response = http.post(
       'https://pizza-factory.cs329.click/api/order/verify',
