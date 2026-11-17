@@ -25,6 +25,7 @@ export const options = {
 
 export function imported_HAR() {
   let response
+  const vars = {}
 
   group('page@85f99193c37d9983a7d2f488b9660a0b - JWT Pizza', function () {
     response = http.get('https://pizza.joshuajob-cs.click/', {
@@ -68,6 +69,7 @@ export function imported_HAR() {
       console.log(response.body);
       fail('Login was *not* 200');
     }
+    vars.authToken = response.json().token
     sleep(0.9)
 
     response = http.get('https://pizza-service.joshuajob-cs.click/api/order/menu', {
@@ -75,7 +77,7 @@ export function imported_HAR() {
         accept: '*/*',
         'accept-encoding': 'gzip, deflate, br, zstd',
         authorization:
-          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwibmFtZSI6InBpenphIGRpbmVyIiwiZW1haWwiOiJkQGp3dC5jb20iLCJyb2xlcyI6W3sicm9sZSI6ImRpbmVyIn1dLCJpYXQiOjE3OTQ4OTI0ODR9.jklTkoOJAjnpK0Wc46xPirU0kpZwOR0U2-zAPEmQ8u0',
+          `Bearer ${vars.authToken}`,
         'content-type': 'application/json',
         origin: 'https://pizza.joshuajob-cs.click',
         priority: 'u=1, i',
@@ -95,7 +97,7 @@ export function imported_HAR() {
           accept: '*/*',
           'accept-encoding': 'gzip, deflate, br, zstd',
           authorization:
-            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwibmFtZSI6InBpenphIGRpbmVyIiwiZW1haWwiOiJkQGp3dC5jb20iLCJyb2xlcyI6W3sicm9sZSI6ImRpbmVyIn1dLCJpYXQiOjE3OTQ4OTI0ODR9.jklTkoOJAjnpK0Wc46xPirU0kpZwOR0U2-zAPEmQ8u0',
+            `Bearer ${vars.authToken}`,
           'content-type': 'application/json',
           origin: 'https://pizza.joshuajob-cs.click',
           priority: 'u=1, i',
@@ -115,7 +117,7 @@ export function imported_HAR() {
         accept: '*/*',
         'accept-encoding': 'gzip, deflate, br, zstd',
         authorization:
-          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwibmFtZSI6InBpenphIGRpbmVyIiwiZW1haWwiOiJkQGp3dC5jb20iLCJyb2xlcyI6W3sicm9sZSI6ImRpbmVyIn1dLCJpYXQiOjE3OTQ4OTI0ODR9.jklTkoOJAjnpK0Wc46xPirU0kpZwOR0U2-zAPEmQ8u0',
+          `Bearer ${vars.authToken}`,
         'content-type': 'application/json',
         origin: 'https://pizza.joshuajob-cs.click',
         priority: 'u=1, i',
@@ -136,7 +138,7 @@ export function imported_HAR() {
           accept: '*/*',
           'accept-encoding': 'gzip, deflate, br, zstd',
           authorization:
-            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwibmFtZSI6InBpenphIGRpbmVyIiwiZW1haWwiOiJkQGp3dC5jb20iLCJyb2xlcyI6W3sicm9sZSI6ImRpbmVyIn1dLCJpYXQiOjE3OTQ4OTI0ODR9.jklTkoOJAjnpK0Wc46xPirU0kpZwOR0U2-zAPEmQ8u0',
+            `Bearer ${vars.authToken}`,
           'content-type': 'application/json',
           origin: 'https://pizza.joshuajob-cs.click',
           priority: 'u=1, i',
@@ -162,7 +164,7 @@ export function imported_HAR() {
           accept: '*/*',
           'accept-encoding': 'gzip, deflate, br, zstd',
           authorization:
-            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwibmFtZSI6InBpenphIGRpbmVyIiwiZW1haWwiOiJkQGp3dC5jb20iLCJyb2xlcyI6W3sicm9sZSI6ImRpbmVyIn1dLCJpYXQiOjE3OTQ4OTI0ODR9.jklTkoOJAjnpK0Wc46xPirU0kpZwOR0U2-zAPEmQ8u0',
+            `Bearer ${vars.authToken}`,
           'content-type': 'application/json',
           origin: 'https://pizza.joshuajob-cs.click',
           priority: 'u=1, i',
