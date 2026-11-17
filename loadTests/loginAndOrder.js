@@ -155,10 +155,11 @@ export function imported_HAR() {
       console.log(response.body);
       fail('Purchase was *not* 200');
     }
+    vars.pizzaJwt = response.json().jwt
 
     response = http.post(
       'https://pizza-factory.cs329.click/api/order/verify',
-      '{"jwt":"eyJpYXQiOjE3OTQ4OTI0ODYsImV4cCI6MTc5NDk3ODg4NiwiaXNzIjoiY3MzMjkuY2xpY2siLCJhbGciOiJSUzI1NiIsImtpZCI6Ik9TcF94VzhlM3kwNk1KS3ZIeW9sRFZMaXZXX2hnTWxhcFZSUVFQVndiY0UifQ.eyJ2ZW5kb3IiOnsiaWQiOiJqb3Noam9iIiwibmFtZSI6Ikpvc2h1YSBKb2IifSwiZGluZXIiOnsiaWQiOjIsIm5hbWUiOiJwaXp6YSBkaW5lciIsImVtYWlsIjoiZEBqd3QuY29tIn0sIm9yZGVyIjp7Iml0ZW1zIjpbeyJtZW51SWQiOjIsImRlc2NyaXB0aW9uIjoiUGVwcGVyb25pIiwicHJpY2UiOjAuMDA0Mn1dLCJzdG9yZUlkIjoiMSIsImZyYW5jaGlzZUlkIjoxLCJpZCI6Mjd9fQ.bNQaEPkbpXu2QlzHNYlNE-SUfgiAXK9t6bqh8T91iMtqUtp9rW12-5e-hIVUj41toxci_x5Slb5oz4nYSliZMo2fIlUb3vjmPATpdUFRh7VaDwvX2RtloOMdT_nSWrExGmt6IVQ2npMTQYq9IvtOyNhupSZmEGVz53FXdh6sEiZ4Xozer4H2VKhopbFvl1i0pqHJdKnmvdw3OyWTwpdMiol3_lR2fzWM_fV5pPvdLLUAPV5mJBwzt1tJaPUL-TGUl3KjoF9ta21wyGUkziYaj7lvlLeapELz5X6LkYIJOqFD9W6wXdUz_I-9h-vFa40KNMdqMtPqGDQdDMJb6iVbtH-ym1Gpy0UmtwAwwSSWDwGD1Yyb5VBZhVZMmShgSoV7spi1cIq3fRwvmhyA8MCxwwqaBTG3iFO_tug23HHa99ObRfHNSRe6OPwXmIEKPou32H4yY_KNbx6dOvjCeAwVJbIs7G05KF8MQZ8U0U5pi05AEcbG6vqI3sigR2cJ5hmizfPfvmxWUstqxsQ4Xx9pDX7b0kpsVnR1m0D4UU6yydUBvojMNokY2IjgiYaZ_LFfVtmFjqbGpgwVcmDblLnYYj-7vrkEHz4AUFLCb29hnQqrmB-zk801SOIB2ffR0IxIkkuaPVmGgFzg4viS_twGAVMLWaqHpC0nPZDvCyOdazQ"}',
+      JSON.stringify({ jwt: vars.pizzaJwt }),
       {
         headers: {
           accept: '*/*',
